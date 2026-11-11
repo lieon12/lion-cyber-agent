@@ -179,5 +179,41 @@
         "findings": []
       }
     }
-  ]
+  ],
+  "capabilities": {
+    "coding_pct": 34,
+    "hacking_pct": 29,
+    "dataset_examples": 20,
+    "coding_topics_covered": [
+      "access",
+      "audit",
+      "csrf",
+      "file",
+      "hash",
+      "header",
+      "injection",
+      "login",
+      "password",
+      "rate",
+      "redirect",
+      "session",
+      "sql",
+      "upload",
+      "validasi",
+      "xss"
+    ],
+    "tools_made": [
+      "fetch_url",
+      "search_web",
+      "check_site_basic",
+      "scan_sql"
+    ],
+    "lessons": 6,
+    "owasp_categories_covered": [
+      "secure headers",
+      "sql injection"
+    ],
+    "sites_tested_ok": 2,
+    "findings_counted": 7
+  }
 }
