@@ -1,0 +1,11 @@
+requests>=2.31
+beautifulsoup4>=4.12
+python-dotenv>=1.0
+# Untuk agen dengan API (pilih salah satu, isi kunci di .env):
+# openai>=1.30
+# Untuk training LoRA (hanya di Codespace / Colab dengan GPU):
+# torch>=2.2
+# transformers>=4.40
+# peft>=0.11
+# datasets>=2.19
+# accelerate>=0.29
