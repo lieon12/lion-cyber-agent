@@ -3,16 +3,23 @@
 Cara jalan:
     python lab/run_lab.py [--date 2026-11-11]
 
-Yang dilakukan (hanya ke website sendiri, payload aman):
-1. check_site_basic ke https://www.verifydeal.site/
-2. fetch_url ke https://www.verifydeal.site/
-3. scan_sql param=q ke https://www.verifydeal.site/
+Yang dilakukan (hanya ke target yang diizinkan, payload aman):
+1. check_site_basic ke setiap target
+2. fetch_url ke setiap target
+3. scan_sql param=q ke setiap target
 4. Tulis laporan ke reports/YYYY-MM-DD.md + reports/YYYY-MM-DD.json
 
+Target yang diizinkan (lihat agent/validator.py):
+- https://www.verifydeal.site/ — website sendiri
+- http://testphp.vulnweb.com/ — situs uji publik Acunetix, sengaja rentan
+- https://demo.owasp-juice.shop/ — OWASP Juice Shop, sengaja rentan
+
+Kalau satu target tidak bisa dijangkau, lab mencatat kegagalannya dan
+lanjut ke target berikutnya, bukan berhenti total.
+
 Tanpa GEMINI_API_KEY di mesin ini, lab berjalan mode rule-based v2
-(tools langsung, tanpa otak Gemini). Kalau nanti API key disediakan
-lewat Secure Vault untuk mesin ini, lab bisa memakai otak Gemini juga.
-Jangan pernah tulis API key di file ini atau di laporan.
+(tools langsung, tanpa otak Gemini). Jangan pernah tulis API key
+di file ini atau di laporan.
 """
 import argparse
 import json
@@ -25,28 +32,14 @@ sys.path.insert(0, str(ROOT))
 
 from agent.agent import run  # noqa: E402
 
-TARGET = "https://www.verifydeal.site/"
+TARGETS = [
+    "https://www.verifydeal.site/",
+    "http://testphp.vulnweb.com/",
+    "https://demo.owasp-juice.shop/",
+]
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--date", default=date.today().isoformat())
-    args = parser.parse_args()
-
-    tasks = [
-        f"cek {TARGET}",
-        f"lanjut scan SQL-nya",
-    ]
-    # "lanjut scan SQL-nya" butuh last_url dari langkah pertama.
-    trace = []
-    last_url = None
-    for task in tasks:
-        for step in run(task, last_url=last_url):
-            trace.append(step)
-            if step["ok"] and isinstance(step.get("result"), dict) and step["result"].get("url"):
-                last_url = step["result"]["url"]
-
-    # Ringkasan temuan
+def summarize_trace(trace):
     findings = []
     for step in trace:
         if not step["ok"]:
@@ -67,31 +60,51 @@ def main():
                 findings.append("  * Tidak ada sinyal kuat. Bukan berarti 100% aman — lanjutkan audit kode.")
             for f in r.get("findings", []):
                 findings.append(f"  * payload {f.get('payload')!r}: status {f.get('status')}")
+    return findings
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--date", default=date.today().isoformat())
+    args = parser.parse_args()
+
+    all_trace = []
+    per_target = {}
+    for target in TARGETS:
+        trace = []
+        last_url = None
+        for task in [f"cek {target}", "lanjut scan SQL-nya"]:
+            for step in run(task, last_url=last_url):
+                trace.append(step)
+                if step["ok"] and isinstance(step.get("result"), dict) and step["result"].get("url"):
+                    last_url = step["result"]["url"]
+        per_target[target] = summarize_trace(trace)
+        all_trace.extend(trace)
 
     reports = ROOT / "reports"
     reports.mkdir(exist_ok=True)
     data = {
         "date": args.date,
-        "target": TARGET,
-        "tools_used": sorted({s["tool"] for s in trace}),
-        "trace": trace,
-        "findings": findings,
+        "targets": TARGETS,
+        "tools_used": sorted({s["tool"] for s in all_trace}),
+        "per_target": per_target,
+        "trace": all_trace,
     }
     (reports / f"{args.date}.json").write_text(
-        json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8"
+        json.dumps(data, indent=2, ensure_ascii=False, default=str), encoding="utf-8"
     )
     lines = [
         f"# Laporan Lab — {args.date}",
         "",
-        f"Target: {TARGET} (website sendiri, pengujian)",
+        "Target yang diizinkan: " + ", ".join(TARGETS),
         f"Tools dipakai: {', '.join(data['tools_used'])}",
         "",
-        "## Temuan",
-        "",
     ]
-    lines += [f"- {f}" for f in findings]
+    for target, findings in per_target.items():
+        lines += [f"## {target}", ""]
+        lines += [f"- {f}" for f in findings]
+        lines += [""]
     lines += [
-        "",
         "## Catatan",
         "",
         "- Scan memakai payload non-destruktif saja.",
@@ -101,8 +114,10 @@ def main():
     ]
     (reports / f"{args.date}.md").write_text("\n".join(lines), encoding="utf-8")
     print(f"Lab selesai. Laporan: reports/{args.date}.md")
-    for f in findings:
-        print(f)
+    for target, findings in per_target.items():
+        print(f"\n== {target} ==")
+        for f in findings:
+            print(f)
 
 
 if __name__ == "__main__":

@@ -14,7 +14,12 @@ Hasilnya masuk ke `reports/YYYY-MM-DD.md` dan `reports/YYYY-MM-DD.json`.
 
 ## Yang dilakukan lab
 
-Hanya ke website sendiri (`https://www.verifydeal.site/`), payload aman:
+Hanya ke target yang diizinkan, payload aman:
+- `https://www.verifydeal.site/` — website sendiri
+- `http://testphp.vulnweb.com/` — situs uji publik Acunetix, sengaja rentan
+- `https://demo.owasp-juice.shop/` — OWASP Juice Shop, sengaja rentan
+
+Per target:
 1. `check_site_basic` — HTTPS dan header keamanan
 2. `fetch_url` — judul dan isi halaman
 3. `scan_sql` param `q` — uji SQL injection non-destruktif

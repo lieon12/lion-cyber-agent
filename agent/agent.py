@@ -64,7 +64,10 @@ def plan(task, last_url=None):
         url = extract_url(task)
         steps.append(("check_site_basic", {"url": url}))
         steps.append(("fetch_url", {"url": url}))
-    if "cari" in t or "search" in t or "cve" in t or "owasp" in t:
+    # Jangan cari di web hanya karena URL-nya mengandung kata "owasp" —
+    # itu yang membuat "cek https://demo.owasp-juice.shop/" kemarin
+    # malah menjalankan search_web yang tidak perlu.
+    elif "cari" in t or "search" in t or "cve" in t or "owasp" in t:
         steps.append(("search_web", {"query": task}))
     if not steps:
         steps.append(("search_web", {"query": task}))

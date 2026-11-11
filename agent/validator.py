@@ -16,7 +16,13 @@ FORBIDDEN_PAYLOAD = ["drop ", "delete ", "update ", "insert ", "truncate ", "; d
 
 
 def allowed_domains():
-    raw = os.environ.get("ALLOWED_DOMAINS", "verifydeal.site,example.com")
+    # verifydeal.site = website sendiri. example.com = situs uji aman.
+    # testphp.vulnweb.com dan demo.owasp-juice.shop = situs uji publik yang
+    # sengaja dibuat rentan untuk latihan keamanan, jadi boleh di-scan.
+    raw = os.environ.get(
+        "ALLOWED_DOMAINS",
+        "verifydeal.site,example.com,testphp.vulnweb.com,demo.owasp-juice.shop",
+    )
     return {d.strip().lower() for d in raw.split(",") if d.strip()}
 
 
