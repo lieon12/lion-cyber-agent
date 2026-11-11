@@ -47,6 +47,16 @@ cp .env.example .env   # isi LLM_API_KEY kamu kalau pakai API, atau pakai model 
 python -m agent.chat
 ```
 
+## Laboratorium (dijalankan bokone)
+
+Lab ada di `lab/`. Bokone yang menjalankan kodenya di mesinnya sendiri,
+menulis laporan ke `reports/YYYY-MM-DD.md`, lalu push ke repo.
+Lion tidak perlu menjalankan apa-apa setiap hari.
+
+```bash
+python lab/run_lab.py
+```
+
 ## Otak Gemini v3
 
 Chat v3 memakai Gemini API sebagai otak, kalau `GEMINI_API_KEY` ada

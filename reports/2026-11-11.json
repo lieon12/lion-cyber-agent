@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-11",
+  "target": "https://www.verifydeal.site/",
+  "tools_used": [
+    "check_site_basic",
+    "fetch_url",
+    "scan_sql"
+  ],
+  "trace": [
+    {
+      "tool": "check_site_basic",
+      "kwargs": {
+        "url": "https://www.verifydeal.site/"
+      },
+      "ok": true,
+      "result": {
+        "url": "https://www.verifydeal.site/",
+        "status": 200,
+        "final_url": "https://www.verifydeal.site/",
+        "server": "Vercel",
+        "content_type": "text/html; charset=utf-8",
+        "title": "Pusat Laporan Identitas Digital",
+        "text": "Pusat Laporan Identitas Digital Pusat Reputasi Rekening Digital Cari rekening, e-wallet, atau identitas pembayaran untuk melihat riwayat laporan dari masyarakat. Contoh: 081356039029, NAMA... 2.351 Rekening Terdaftar Total data di sistem 15.287 Laporan Positif Dari masyarakat 1.423 Laporan Negatif Dari masyarakat 0 Total Pengunjung Pengunjung unik (Real-time) Daftar Rekening Terbaru Urutkan: Terbaru Terlama Like Terbanyak Dislike Terbanyak Pencarian Tidak Ditemukan Kami tidak menemukan rekening atau nama tersebut. Pastikan nomor rekening diketik dengan benar. × Riwayat Aktivitas Mode Admin × Tambah Data Baru Nama Bank (Contoh: BCA, SeaBank, DANA): Nomor Rekening: Atas Nama: Jenis Sosmed (whatsapp/instagram/facebook/telegram): Link Sosmed (Contoh: wa.me/6281...): Kronologi / Modus Penipuan (Opsional): Upload Gambar QRIS: 👑 Jadikan Rekening Ini Sebagai Sponsor VIP (Pin di Atas) Simpan Data & Masukkan Password Laporkan pengalamanmu agar membantu orang lain terhindar dari penipuan. Laporkan Sekarang Pusat Reputasi Rekening Bersama kita ciptakan transaksi digital yang aman. Informasi Tentang Kami Cara Kerja FAQ Kebijakan Privasi Bantuan Laporkan Kesalahan Hubungi Admin Syarat & Ketentuan Disclaimer Informasi yang ditampilkan adalah laporan dari masyarakat. Gunakan dengan bijak sebelum bertransaksi. © 2026 Pusat Reputasi Rekening Digital. All rights reserved. × Form Laporan Rekening Nama Anda (Pelapor): Peringatan: Nama anda aman di database kami dan tidak ditampilkan kepada siapapun. Nomor Rekening / E-Wallet Pelaku: Nama Bank / E-Wallet Pelaku: Atas Nama Pelaku (Sesuai Rekening / E-Wallet): Link / Nomor Sosmed Pelaku (Opsional): Jenis Sosmed Pelaku (Opsional): Kronologi / Modus Penipuan (Opsional): Upload Bukti Screenshot (Opsional): Upload QRIS Pelaku (Opsional): Peringatan Hukum: Pastikan data yang Anda berikan valid. Laporan palsu dapat merugikan pihak lain. Kirim Laporan ke Admin",
+        "security_headers": {
+          "Strict-Transport-Security": "max-age=63072000",
+          "Content-Security-Policy": "",
+          "X-Frame-Options": "",
+          "X-Content-Type-Options": ""
+        },
+        "findings": [
+          "Memakai HTTPS.",
+          "Tidak ada header Content-Security-Policy (CSP).",
+          "Tidak ada header X-Frame-Options — rentan clickjacking.",
+          "Tidak ada header X-Content-Type-Options."
+        ]
+      }
+    },
+    {
+      "tool": "fetch_url",
+      "kwargs": {
+        "url": "https://www.verifydeal.site/"
+      },
+      "ok": true,
+      "result": {
+        "url": "https://www.verifydeal.site/",
+        "status": 200,
+        "final_url": "https://www.verifydeal.site/",
+        "server": "Vercel",
+        "content_type": "text/html; charset=utf-8",
+        "title": "Pusat Laporan Identitas Digital",
+        "text": "Pusat Laporan Identitas Digital Pusat Reputasi Rekening Digital Cari rekening, e-wallet, atau identitas pembayaran untuk melihat riwayat laporan dari masyarakat. Contoh: 081356039029, NAMA... 2.351 Rekening Terdaftar Total data di sistem 15.287 Laporan Positif Dari masyarakat 1.423 Laporan Negatif Dari masyarakat 0 Total Pengunjung Pengunjung unik (Real-time) Daftar Rekening Terbaru Urutkan: Terbaru Terlama Like Terbanyak Dislike Terbanyak Pencarian Tidak Ditemukan Kami tidak menemukan rekening atau nama tersebut. Pastikan nomor rekening diketik dengan benar. × Riwayat Aktivitas Mode Admin × Tambah Data Baru Nama Bank (Contoh: BCA, SeaBank, DANA): Nomor Rekening: Atas Nama: Jenis Sosmed (whatsapp/instagram/facebook/telegram): Link Sosmed (Contoh: wa.me/6281...): Kronologi / Modus Penipuan (Opsional): Upload Gambar QRIS: 👑 Jadikan Rekening Ini Sebagai Sponsor VIP (Pin di Atas) Simpan Data & Masukkan Password Laporkan pengalamanmu agar membantu orang lain terhindar dari penipuan. Laporkan Sekarang Pusat Reputasi Rekening Bersama kita ciptakan transaksi digital yang aman. Informasi Tentang Kami Cara Kerja FAQ Kebijakan Privasi Bantuan Laporkan Kesalahan Hubungi Admin Syarat & Ketentuan Disclaimer Informasi yang ditampilkan adalah laporan dari masyarakat. Gunakan dengan bijak sebelum bertransaksi. © 2026 Pusat Reputasi Rekening Digital. All rights reserved. × Form Laporan Rekening Nama Anda (Pelapor): Peringatan: Nama anda aman di database kami dan tidak ditampilkan kepada siapapun. Nomor Rekening / E-Wallet Pelaku: Nama Bank / E-Wallet Pelaku: Atas Nama Pelaku (Sesuai Rekening / E-Wallet): Link / Nomor Sosmed Pelaku (Opsional): Jenis Sosmed Pelaku (Opsional): Kronologi / Modus Penipuan (Opsional): Upload Bukti Screenshot (Opsional): Upload QRIS Pelaku (Opsional): Peringatan Hukum: Pastikan data yang Anda berikan valid. Laporan palsu dapat merugikan pihak lain. Kirim Laporan ke Admin",
+        "security_headers": {
+          "Strict-Transport-Security": "max-age=63072000",
+          "Content-Security-Policy": "",
+          "X-Frame-Options": "",
+          "X-Content-Type-Options": ""
+        }
+      }
+    },
+    {
+      "tool": "scan_sql",
+      "kwargs": {
+        "url": "https://www.verifydeal.site/",
+        "param": "q"
+      },
+      "ok": true,
+      "result": {
+        "url": "https://www.verifydeal.site/",
+        "param": "q",
+        "baseline_status": 200,
+        "findings": []
+      }
+    }
+  ],
+  "findings": [
+    "check_site_basic: status 200",
+    "  * Memakai HTTPS.",
+    "  * Tidak ada header Content-Security-Policy (CSP).",
+    "  * Tidak ada header X-Frame-Options — rentan clickjacking.",
+    "  * Tidak ada header X-Content-Type-Options.",
+    "fetch_url: Pusat Laporan Identitas Digital (status 200, server Vercel)",
+    "scan_sql: https://www.verifydeal.site/ param=q (baseline status 200)",
+    "  * Tidak ada sinyal kuat. Bukan berarti 100% aman — lanjutkan audit kode."
+  ]
+}
