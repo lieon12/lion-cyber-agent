@@ -6,7 +6,7 @@ chat.py fallback ke mode rule-based v2.
 API key TIDAK boleh ditulis di chat atau di-commit ke repo.
 Isi di file .env di Codespace:
     GEMINI_API_KEY=...
-    GEMINI_MODEL=gemini-2.0-flash
+    GEMINI_MODEL=gemini-3.8-flash
 """
 import json
 import os
@@ -32,7 +32,7 @@ def has_api_key():
 
 
 def model_name():
-    return os.environ.get("GEMINI_MODEL", "gemini-2.0-flash").strip()
+    return os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip()
 
 
 def ask_gemini(user_text, lessons, history, last_url=None):

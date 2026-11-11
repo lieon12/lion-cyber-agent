@@ -58,7 +58,7 @@ di `.env`. Kalau tidak ada, chat fallback ke mode rule-based v2.
 2. Di Codespace:
 ```bash
 cp .env.example .env
-# edit .env, isi GEMINI_API_KEY dan GEMINI_MODEL (default gemini-2.0-flash)
+# edit .env, isi GEMINI_API_KEY dan GEMINI_MODEL (default gemini-3.8-flash)
 python -m agent.chat
 ```
 
