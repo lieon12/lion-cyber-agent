@@ -17,10 +17,13 @@ Contoh: belum paham cara scan SQL injection → agen menulis `tools/sql_scan.py`
 ```
 agent/          # agen + tools internet
   agent.py      # loop: pikir -> pilih tool -> jalankan -> simpulkan
-  tools.py      # search_web, fetch_url, check_site_basic
-  chat.py       # CHAT v2: ngobrol seperti AI biasa (python -m agent.chat)
+  tools.py      # search_web, fetch_url, check_site_basic, scan_sql
+  chat.py       # CHAT v3: ngobrol seperti AI biasa (python -m agent.chat)
+  brain.py      # Otak Gemini v3 (REST API, tanpa SDK tambahan)
+  validator.py  # Validator: kode yang menegakkan aturan Lion
+  system_prompt.md # Instruksi ketat untuk model
   memory.py     # pelajaran + riwayat chat
-  lessons.md    # pelajaran dari kesalahan, dibaca sebelum tugas baru
+  lessons.md    # pelajaran dari kesalahan, dibaca sebelum tugas baru (kini 6 pelajaran)
   main.py       # CLI lama, sekali jalan (legacy)
 tools/
   sql_scan.py   # contoh tool scan SQL injection (aman, non-destruktif)
@@ -44,6 +47,27 @@ cp .env.example .env   # isi LLM_API_KEY kamu kalau pakai API, atau pakai model 
 python -m agent.chat
 ```
 
+## Otak Gemini v3
+
+Chat v3 memakai Gemini API sebagai otak, kalau `GEMINI_API_KEY` ada
+di `.env`. Kalau tidak ada, chat fallback ke mode rule-based v2.
+
+1. Buat API key di Google AI Studio (jangan kirim key ke chat,
+   jangan commit `.env` ke repo):
+   https://aistudio.google.com/app/apikey
+2. Di Codespace:
+```bash
+cp .env.example .env
+# edit .env, isi GEMINI_API_KEY dan GEMINI_MODEL (default gemini-2.0-flash)
+python -m agent.chat
+```
+
+Yang menjaga agen tetap nurut bukan modelnya, tapi **validator**
+(`agent/validator.py`): sebelum tool dijalankan, kode mengecek
+apakah tool itu diizinkan, apakah URL-nya ada di `ALLOWED_DOMAINS`
+(website sendiri), dan apakah payload-nya aman. Kalau ditolak,
+tool tidak dijalankan, apa pun kata modelnya.
+
 Di dalam chat, ketik seperti ngobrol biasa:
 ```
 Kamu: cek https://website-kamu-sendiri.example
@@ -52,6 +76,12 @@ Kamu: itu salah, seharusnya lanjut ke form laporan
 Kamu: /pelajaran
 Kamu: exit
 ```
+
+Sejak v2.1, `lanjut scan SQL-nya` benar-benar menjalankan
+`tools/sql_scan.py` ke website yang terakhir dicek (bukan lagi
+mencari tutorial SQL di web). Param default-nya `q` (form pencarian);
+kalau form target pakai nama lain, sebutkan: `scan SQL https://... param username`.
+Kalau belum ada website yang dicek, agen akan menanyakan URL-nya dulu.
 
 Perintah lama `python -m agent.main "prompt"` masih ada, tapi tidak
 disarankan — chat v2 yang dipakai sehari-hari.

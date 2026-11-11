@@ -4,6 +4,9 @@ Ini adalah 'tangan' agen: modelnya sendiri tidak bisa internet,
 tools inilah yang mengambil data live lalu diberikan ke model
 untuk dianalisis.
 """
+import importlib.util
+from pathlib import Path
+
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
@@ -50,6 +53,25 @@ def search_web(query, limit=5):
     for a in soup.select("a.result__a")[:limit]:
         out.append({"title": a.get_text(" ", strip=True), "url": a.get("href", "")})
     return out
+
+
+def scan_sql(url, param="q"):
+    """Jalankan tools/sql_scan.py ke website sendiri (payload aman, non-destruktif).
+
+    Param default "q" adalah tebakan untuk form pencarian; kalau form
+    target pakai nama lain, panggil dengan param itu, misal
+    scan_sql(url, param="username"). Hasilnya: tidak ada sinyal kuat
+    BUKAN berarti 100% aman — lanjutkan audit kode.
+    """
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        raise ValueError(f"URL tidak valid untuk scan: {url}")
+    spec = importlib.util.spec_from_file_location(
+        "lion_sql_scan", Path(__file__).resolve().parent.parent / "tools" / "sql_scan.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.test_param(url, param)
 
 
 def check_site_basic(url):

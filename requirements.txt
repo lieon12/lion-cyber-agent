@@ -1,7 +1,9 @@
 requests>=2.31
 beautifulsoup4>=4.12
 python-dotenv>=1.0
-# Untuk agen dengan API (pilih salah satu, isi kunci di .env):
+# Otak Gemini v3 memakai REST API via requests (tidak perlu SDK tambahan).
+# Isi GEMINI_API_KEY di .env. Tanpa key, chat fallback ke mode rule-based v2.
+# Untuk agen dengan API lain (pilih salah satu, isi kunci di .env):
 # openai>=1.30
 # Untuk training LoRA (hanya di Codespace / Colab dengan GPU):
 # torch>=2.2

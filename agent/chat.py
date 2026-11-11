@@ -1,4 +1,4 @@
-"""Chat v2: ngobrol dengan agen seperti AI biasa.
+"""Chat v3: ngobrol dengan agen seperti AI biasa — sekarang dengan otak Gemini.
 
 Cara pakai (di Codespace):
     python -m agent.chat
@@ -12,14 +12,22 @@ Lalu ketik perintah seperti chat biasa, contoh:
 
 Bukan lagi: python -m agent.main "prompt" sekali jalan lalu mati.
 
+Otak: kalau GEMINI_API_KEY ada di .env, chat memakai Gemini
+(agent/brain.py) untuk memahami perintah. Kalau tidak ada,
+fallback ke mode rule-based v2. Validator (agent/validator.py)
+yang memutuskan apakah sebuah tool boleh dijalankan — model
+hanya menyarankan, kode yang menegakkan aturan Lion.
+
 Agen membaca agent/lessons.md sebelum setiap tugas, menyimpan
 riwayat di .agent_memory.json (lokal, tidak di-commit), dan
 mencatat kesalahan baru sebagai pelajaran.
 """
 import sys
 
-from .agent import run
+from .agent import TOOLS, extract_url, is_sql_scan, run
+from .brain import ask_gemini, has_api_key
 from .memory import add_lesson, load_history, load_lessons, save_history
+from .validator import validate_tool_call
 
 
 def summarize(trace):
@@ -29,6 +37,25 @@ def summarize(trace):
             lines.append(f"- Tool {step['tool']} gagal: {step.get('error')}")
             continue
         r = step["result"]
+        if step["tool"] == "scan_sql" and isinstance(r, dict):
+            lines.append(
+                f"- scan_sql: {r.get('url')} param={r.get('param')} "
+                f"(baseline status {r.get('baseline_status')})"
+            )
+            findings = r.get("findings") or []
+            if not findings:
+                lines.append(
+                    "  * Tidak ada sinyal kuat. Bukan berarti 100% aman — lanjutkan audit kode."
+                )
+            for f in findings:
+                lines.append(
+                    f"  * payload {f.get('payload')!r}: status {f.get('status')}, "
+                    f"kemiripan {f.get('similarity_to_baseline')}, "
+                    f"tanda error DB: {f.get('db_error_signs') or '-'}"
+                )
+                if f.get("note"):
+                    lines.append(f"    {f['note']}")
+            continue
         if isinstance(r, dict) and "findings" in r:
             lines.append(f"- {step['tool']}: status {r.get('status')}")
             for f in r["findings"]:
@@ -57,9 +84,40 @@ def handle_feedback(text, history):
     save_history(history)
 
 
+def execute_brain_tool(tool_call, last_url=None):
+    """Jalankan tool yang diminta Gemini, setelah divalidasi.
+
+    Kembalikan (trace_step, new_last_url). Validator yang memutuskan —
+    kalau ditolak, tool tidak dijalankan sama sekali.
+    """
+    name = tool_call.get("tool", "")
+    args = tool_call.get("args", {}) or {}
+    # "lanjut scan SQL" tanpa URL: pakai URL terakhir.
+    if name == "scan_sql" and not args.get("url") and last_url:
+        args = dict(args, url=last_url)
+    ok, reason = validate_tool_call(name, args)
+    if not ok:
+        return {"tool": name, "kwargs": args, "ok": False, "error": f"Validator menolak: {reason}"}, last_url
+    fn = TOOLS.get(name)
+    if fn is None:
+        return {"tool": name, "kwargs": args, "ok": False, "error": f"Tool '{name}' tidak dikenal."}, last_url
+    try:
+        result = fn(**args)
+        new_url = args.get("url") or last_url
+        return {"tool": name, "kwargs": args, "ok": True, "result": result}, new_url
+    except Exception as e:  # noqa: BLE001
+        return {"tool": name, "kwargs": args, "ok": False, "error": str(e)}, last_url
+
+
 def main():
     lessons = load_lessons()
     history = load_history()
+    last_url = None  # URL terakhir yang dicek — dipakai "lanjut ..." berikutnya.
+    for entry in reversed(history):
+        if entry.get("role") == "user":
+            last_url = extract_url(entry.get("content", ""))
+            if last_url:
+                break
     print("=== lion-cyber-agent — chat ===")
     print("Ketik perintah seperti ngobrol biasa. Ketik /bantuan, /pelajaran, atau exit.")
     if lessons:
@@ -82,9 +140,13 @@ def main():
             print(
                 "Agen: Contoh perintah:\n"
                 "  cek https://website-kamu.example\n"
+                "  lanjut scan SQL-nya (pakai website yang terakhir dicek)\n"
+                "  scan SQL https://website-kamu.example param username\n"
                 "  cari CVE terbaru untuk XSS\n"
                 "  /pelajaran — lihat pelajaran dari kesalahan\n"
-                "  Kalau saya salah, tulis 'itu salah' lalu saya tanya perbaikannya."
+                "  Kalau saya salah, tulis 'itu salah' lalu saya tanya perbaikannya.\n"
+                "  Otak Gemini aktif kalau GEMINI_API_KEY ada di .env, "
+                "kalau tidak ada saya pakai mode rule-based v2."
             )
             continue
         if text.lower() in ("/pelajaran", "pelajaran"):
@@ -97,11 +159,53 @@ def main():
             continue
 
         # Tugas biasa: baca pelajaran dulu, lalu jalankan tools.
+        # "Lanjut scan SQL" tanpa URL yang pernah dicek: tanya dulu,
+        # jangan cari tutorial di web (pelajaran 6).
+        if is_sql_scan(text) and not extract_url(text) and not last_url:
+            print(
+                "Agen: Website mana yang mau saya scan SQL-nya? "
+                "Tulis URL-nya, contoh: scan SQL https://website-kamu.example param username"
+            )
+            continue
         lessons_now = load_lessons()
         print(f"Agen: Saya cek dulu {len(lessons_now)} pelajaran saya, lalu jalankan tugasnya...")
-        trace = run(text)
+        # --- Otak Gemini (v3) kalau API key ada ---
+        trace = None
+        reply_text = ""
+        if has_api_key():
+            print("Agen: Otak Gemini aktif, saya tanya dulu ke Gemini...")
+            brain = ask_gemini(text, lessons_now, history, last_url=last_url)
+            if brain.get("error"):
+                print(f"Agen: Gemini gagal ({brain['error']}), saya pakai mode rule-based v2.")
+            elif brain.get("tool_call"):
+                step, last_url = execute_brain_tool(brain["tool_call"], last_url=last_url)
+                trace = [step]
+                # Minta Gemini merangkum hasil tool, kalau gagal pakai ringkasan lokal.
+                summary_ctx = f"Hasil tool {step['tool']}: {step.get('result') or step.get('error')}"
+                brain2 = ask_gemini(
+                    f"Rangkum hasil ini untuk user dalam bahasa Indonesia: {summary_ctx}",
+                    lessons_now,
+                    history,
+                    last_url=last_url,
+                )
+                if brain2.get("reply"):
+                    reply_text = brain2["reply"]
+            elif brain.get("reply"):
+                reply_text = brain["reply"]
+        # --- Fallback rule-based v2 ---
+        if trace is None and not reply_text:
+            trace = run(text, last_url=last_url)
+        trace = trace or []
+        for step in trace:
+            if step["ok"] and isinstance(step.get("result"), dict) and step["result"].get("url"):
+                last_url = step["result"]["url"]
+        if extract_url(text):
+            last_url = extract_url(text)
         print("Agen:")
-        print(summarize(trace))
+        if reply_text:
+            print(reply_text)
+        if trace:
+            print(summarize(trace))
         # Pelajaran otomatis dari kegagalan tool
         for step in trace:
             if not step["ok"]:
@@ -111,7 +215,9 @@ def main():
                 )
         print("\nAgen: Kalau ada yang salah dari jawaban saya, tulis saja 'itu salah'.")
         history.append({"role": "user", "content": text})
-        history.append({"role": "assistant", "content": summarize(trace)})
+        history.append(
+            {"role": "assistant", "content": reply_text or summarize(trace)}
+        )
         save_history(history)
 
 
