@@ -18,11 +18,15 @@ Contoh: belum paham cara scan SQL injection → agen menulis `tools/sql_scan.py`
 agent/          # agen + tools internet
   agent.py      # loop: pikir -> pilih tool -> jalankan -> simpulkan
   tools.py      # search_web, fetch_url, check_site_basic
-  main.py       # CLI: python -m agent.main "cek website saya ..."
+  chat.py       # CHAT v2: ngobrol seperti AI biasa (python -m agent.chat)
+  memory.py     # pelajaran + riwayat chat
+  lessons.md    # pelajaran dari kesalahan, dibaca sebelum tugas baru
+  main.py       # CLI lama, sekali jalan (legacy)
 tools/
   sql_scan.py   # contoh tool scan SQL injection (aman, non-destruktif)
 dataset/
   dataset.jsonl # contoh dataset coding + keamanan siber (OWASP Top 10)
+  mistake_lessons.jsonl # contoh salah -> benar, untuk belajar dari kesalahan
   README.md     # format dataset
 training/
   train_lora.py # skeleton fine-tune LoRA untuk model coder kecil
@@ -37,9 +41,39 @@ training/
 ```bash
 pip install -r requirements.txt
 cp .env.example .env   # isi LLM_API_KEY kamu kalau pakai API, atau pakai model lokal
-python -m agent.main "cek https://website-kamu-sendiri.example"
+python -m agent.chat
+```
+
+Di dalam chat, ketik seperti ngobrol biasa:
+```
+Kamu: cek https://website-kamu-sendiri.example
+Kamu: lanjut scan SQL-nya
+Kamu: itu salah, seharusnya lanjut ke form laporan
+Kamu: /pelajaran
+Kamu: exit
+```
+
+Perintah lama `python -m agent.main "prompt"` masih ada, tapi tidak
+disarankan — chat v2 yang dipakai sehari-hari.
+
+Tool scan langsung tetap bisa:
+```bash
 python tools/sql_scan.py --url "https://website-kamu-sendiri.example/login" --param username
 ```
+
+## Belajar dari kesalahan
+
+Agen membaca `agent/lessons.md` sebelum setiap tugas. Kalau dia
+salah, atau kamu koreksi dia dengan menulis "itu salah", dia akan
+bertanya apa perbaikannya, lalu menyimpan pelajaran itu ke
+`agent/lessons.md` supaya tidak diulangi.
+
+Pelajaran pertama: setelah cek header dasar, jangan berhenti —
+lanjut uji form pencarian dan laporan, dan sarankan `tools/sql_scan.py`.
+
+Website `verifydeal.site` adalah situs pengujian — jangan diperbaiki
+dulu, biarkan agen ini yang menemukan dan memperbaikinya nanti.
+
 
 ## Keamanan — baca dulu
 

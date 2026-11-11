@@ -4,6 +4,7 @@ __pycache__/
 venv/
 .env
 .env.local
+.agent_memory.json
 *.log
 training/output/
 training/checkpoints/
