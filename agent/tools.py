@@ -41,18 +41,30 @@ def fetch_url(url, timeout=15):
 
 
 def search_web(query, limit=5):
-    """Cari di internet lewat DuckDuckGo HTML (tanpa API key)."""
-    r = requests.get(
-        "https://html.duckduckgo.com/html/",
-        params={"q": query},
-        headers={"User-Agent": "lion-cyber-agent/0.1"},
-        timeout=15,
-    )
-    soup = BeautifulSoup(r.text, "html.parser")
-    out = []
-    for a in soup.select("a.result__a")[:limit]:
-        out.append({"title": a.get_text(" ", strip=True), "url": a.get("href", "")})
-    return out
+    """Cari di internet (tanpa API key). Coba Bing dulu, kalau kosong coba DuckDuckGo.
+
+    Catatan 2026-11-14: DuckDuckGo HTML mengembalikan halaman kosong (status 202,
+    tanpa hasil) dari lab ini, jadi Bing jadi jalur utama. URL hasil Bing adalah
+    link redirect Bing (bing.com/ck/a?...); fetch_url tetap bisa membukanya
+    karena requests mengikuti redirect sampai ke halaman aslinya.
+    """
+    headers = {"User-Agent": "lion-cyber-agent/0.1"}
+    attempts = [
+        ("https://www.bing.com/search", {"q": query}, "li.b_algo h2 a"),
+        ("https://html.duckduckgo.com/html/", {"q": query}, "a.result__a"),
+    ]
+    for url, params, sel in attempts:
+        try:
+            r = requests.get(url, params=params, headers=headers, timeout=15)
+            soup = BeautifulSoup(r.text, "html.parser")
+            out = []
+            for a in soup.select(sel)[:limit]:
+                out.append({"title": a.get_text(" ", strip=True), "url": a.get("href", "")})
+            if out:
+                return out
+        except Exception:
+            continue
+    return []
 
 
 def scan_sql(url, param="q"):
