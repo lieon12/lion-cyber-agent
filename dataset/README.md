@@ -51,3 +51,46 @@ berbagai frasa dan domain yang diizinkan, scan_sql dengan param
 realistis (q, username), follow-up "lanjut ..." yang memakai URL
 terakhir, entry_rank dengan submission id / handle, dan 3 pertanyaan
 konsep yang harus dijawab dengan TEKS (tanpa tool).
+
+Batch keempat (13 contoh, 2026-11-14, total 144) — pelajaran dari
+kegagalan latih v2: kenapa output v2 sama persis dengan v1 (mismatch
+format prompt), cara memastikan latih ulang benar terpakai (cek
+"Jumlah contoh: 131" dan hash adapter), git pull dulu sebelum uji,
+open redirect (CWE-601) + ORDER BY allowlist (CWE-89), pelajaran
+bounty/Force_Last, dan jangan perbaiki verifydeal.site.
+
+Batch kelima — penalaran, bukan hafalan (18 contoh, 2026-11-15,
+total 162). Perintah Lion: "jangan buat dia hanya menghafal tapi
+berfikir". Contoh baru ini melatih BERPIKIR dulu baru bertindak:
+- Penalaran tool-decision (10): output = 1-3 kalimat penalaran
+  singkat (apa yang sebenarnya diminta user, tool mana yang
+  menyediakan itu dan kenapa, argumennya apa) BARU JSON tool-call
+  di baris sendiri. Melatih membedakan pasangan yang membingungkan:
+  check_site_basic vs fetch_url (header/keamanan vs isi halaman),
+  check_site_basic vs scan_sql (cek dasar vs uji SQL), search_web vs
+  fetch_url (mencari vs membaca), entry_rank vs competition_status
+  (peringkat saya vs aturan kompetisi), scan_sql vs search_web.
+  Termasuk pelajaran dari kesalahan nyata v3: model mengarang nama
+  'check_url' — nama yang benar adalah check_site_basic.
+  `parse_tool_call` di `agent/local_brain.py` sudah menerima JSON
+  yang dikelilingi teks, jadi format ini jalan tanpa ubah kode.
+- Penerapan prinsip (5): cuplikan kode BARU (PHP login SQLi, Flask
+  SSTI, Node eval, upload PHP, pickle Python) — output = penalaran
+  tentang celahnya (apa, kenapa berbahaya) + kode perbaikannya.
+  Bukan tanya-jawab hafalan.
+- Penalaran bounty/uang (3): menilai bounty dengan alasan (hadiah,
+  deadline, jumlah submission, skill yang dibutuhkan → layak atau
+  tidak), memakai hanya fakta terverifikasi: free-model-aggregator-01
+  $500, github-core-clone-01 $500 (0 submission saat pertama
+  terlihat), coin-launch-01 $1000 — yang terakhir ini BUKAN coding
+  biasa: harus launch koin ASLI di pump.fun dengan biaya SOL nyata.
+
+Catatan jujur soal format: 41 contoh tool-calling lama masih
+berformat JSON telanjang (tanpa penalaran) dan TIDAK ditulis ulang
+— parser menerima kedua format, dan menulis ulang berisiko salah.
+Jadi dataset sekarang berisi format campuran; contoh penalaran
+yang baru diharapkan mengajari model untuk berpikir dulu, tapi
+format campuran berarti model bisa menjawab dengan salah satu
+gaya. ~18 contoh penalaran tidak akan membuat model 0.5B menjadi
+penalar yang dalam — yang diharapkan adalah generalisasi yang
+lebih baik daripada hafalan nama tool.

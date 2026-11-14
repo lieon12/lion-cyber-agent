@@ -62,9 +62,24 @@ REQUIRED_ARGS = {
     "read_repo_file": ("owner", "repo", "path"),
 }
 
-# Nama lama di system_prompt.md — dinormalisasi ke nama yang
-# benar-benar dipanggil agen.
-_TOOL_ALIASES = {"sql_scan": "scan_sql"}
+# Nama lama di system_prompt.md, plus nama karangan yang mungkin
+# dihasilkan model (bukti nyata: uji v3 memanggil 'check_url'
+# padahal maksudnya check_site_basic) — dinormalisasi ke nama
+# yang benar-benar dipanggil agen. Validator tetap yang
+# memutuskan apakah tool boleh jalan.
+_TOOL_ALIASES = {
+    "sql_scan": "scan_sql",
+    "check_url": "check_site_basic",
+    "check_site": "check_site_basic",
+    "check_website": "check_site_basic",
+    "sql_injection_scan": "scan_sql",
+    "check_sql": "scan_sql",
+    "get_url": "fetch_url",
+    "fetch": "fetch_url",
+    "search": "search_web",
+    "get_rank": "entry_rank",
+    "check_rank": "entry_rank",
+}
 
 
 class LocalBrainError(Exception):
