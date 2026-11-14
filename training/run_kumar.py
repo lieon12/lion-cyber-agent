@@ -50,10 +50,18 @@ TESTS = [
 
 def load(adapter_dir: Path):
     if not (adapter_dir / "adapter_config.json").exists():
-        print(f"Adapter tidak ditemukan di {adapter_dir}")
-        print("Unzip dulu kumar-lora-trial.zip di folder yang sama dengan script ini,")
-        print("sehingga ada folder ./kumar-lora-trial berisi adapter_config.json.")
-        sys.exit(1)
+        # Zip kadang ter-extract langsung (flat) tanpa subfolder: kalau
+        # adapter_config.json ada di folder saat ini, pakai folder ini.
+        if adapter_dir == Path("kumar-lora-trial") and (Path.cwd() / "adapter_config.json").exists():
+            print("Adapter ditemukan langsung di folder ini (tanpa subfolder).")
+            adapter_dir = Path.cwd()
+        else:
+            print(f"Adapter tidak ditemukan di {adapter_dir}")
+            print("Unzip dulu kumar-lora-trial.zip di folder yang sama dengan script ini,")
+            print("sehingga ada folder ./kumar-lora-trial berisi adapter_config.json,")
+            print("atau jalankan dengan --adapter . kalau file adapter sudah langsung")
+            print("di folder ini (tanpa subfolder).")
+            sys.exit(1)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.float16 if device == "cuda" else torch.float32
