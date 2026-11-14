@@ -1,7 +1,15 @@
 """Chat v3: ngobrol dengan agen seperti AI biasa — sekarang dengan otak Gemini.
 
 Cara pakai (di Codespace):
-    python -m agent.chat
+    python -m agent.chat                       # auto: Gemini kalau ada key, kalau tidak rule-based
+    python -m agent.chat --brain local         # otak lokal Kumar (adapter LoRA hasil fine-tune)
+    python -m agent.chat --brain rule          # selalu rule-based v2
+    python -m agent.chat --brain gemini        # selalu coba Gemini dulu
+
+Otak lokal butuh folder adapter hasil Colab (kumar-lora-trial) di root
+repo + pip install torch transformers peft accelerate. Lihat
+docs/otak-lokal.md. Kalau otak lokal tidak tersedia atau keputusannya
+tidak valid, chat jatuh ke mode rule-based v2 (tidak pernah crash).
 
 Lalu ketik perintah seperti chat biasa, contoh:
     Kamu: cek https://website-kamu.example
@@ -22,10 +30,12 @@ Agen membaca agent/lessons.md sebelum setiap tugas, menyimpan
 riwayat di .agent_memory.json (lokal, tidak di-commit), dan
 mencatat kesalahan baru sebagai pelajaran.
 """
+import argparse
 import sys
 
 from .agent import TOOLS, extract_url, is_sql_scan, run
 from .brain import ask_gemini, has_api_key
+from .local_brain import DEFAULT_ADAPTER_DIR, LocalBrainError, load_local_brain
 from .memory import add_lesson, load_history, load_lessons, save_history
 from .validator import validate_tool_call
 
@@ -110,6 +120,25 @@ def execute_brain_tool(tool_call, last_url=None):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Chat dengan lion-cyber-agent.")
+    parser.add_argument(
+        "--brain",
+        choices=["auto", "rule", "gemini", "local"],
+        default="auto",
+        help="Otak yang dipakai: auto (Gemini kalau ada key, kalau tidak rule-based), "
+        "rule (selalu rule-based v2), gemini (selalu coba Gemini dulu), "
+        "local (adapter LoRA Kumar, fallback ke rule-based kalau tidak tersedia).",
+    )
+    parser.add_argument(
+        "--adapter",
+        default=DEFAULT_ADAPTER_DIR,
+        help="Folder adapter LoRA untuk --brain local (default: ./kumar-lora-trial).",
+    )
+    args = parser.parse_args()
+    brain_mode = args.brain
+    local_brain = None
+    local_brain_failed = False
+
     lessons = load_lessons()
     history = load_history()
     last_url = None  # URL terakhir yang dicek — dipakai "lanjut ..." berikutnya.
@@ -146,7 +175,10 @@ def main():
                 "  /pelajaran — lihat pelajaran dari kesalahan\n"
                 "  Kalau saya salah, tulis 'itu salah' lalu saya tanya perbaikannya.\n"
                 "  Otak Gemini aktif kalau GEMINI_API_KEY ada di .env, "
-                "kalau tidak ada saya pakai mode rule-based v2."
+                "kalau tidak ada saya pakai mode rule-based v2.\n"
+                "  Otak lokal Kumar: jalankan python -m agent.chat --brain local "
+                "(butuh folder adapter kumar-lora-trial di root repo, "
+                "lihat docs/otak-lokal.md)."
             )
             continue
         if text.lower() in ("/pelajaran", "pelajaran"):
@@ -169,10 +201,38 @@ def main():
             continue
         lessons_now = load_lessons()
         print(f"Agen: Saya cek dulu {len(lessons_now)} pelajaran saya, lalu jalankan tugasnya...")
-        # --- Otak Gemini (v3) kalau API key ada ---
+        # --- Otak lokal Kumar (v5): adapter LoRA hasil fine-tune ---
         trace = None
         reply_text = ""
-        if has_api_key():
+        if brain_mode == "local" and not local_brain_failed:
+            if local_brain is None:
+                try:
+                    print("Agen: Memuat otak lokal Kumar (adapter LoRA)...")
+                    local_brain = load_local_brain(adapter_dir=args.adapter)
+                    print("Agen: Otak lokal Kumar aktif.")
+                except LocalBrainError as e:
+                    print(f"Agen: Otak lokal tidak tersedia ({e}) Saya pakai mode rule-based.")
+                    local_brain_failed = True
+            if local_brain is not None:
+                kind, *rest = local_brain.decide(text, last_url=last_url)
+                if kind == "tool":
+                    name, tool_args = rest
+                    step, last_url = execute_brain_tool(
+                        {"tool": name, "args": tool_args}, last_url=last_url
+                    )
+                    trace = [step]
+                    reply_text = local_brain.answer_with_context(
+                        text, step.get("result") or step.get("error")
+                    )
+                elif kind == "answer":
+                    reply_text = rest[0]
+                else:
+                    print(
+                        f"Agen: Otak lokal belum yakin ({rest[0]}), "
+                        "saya pakai mode rule-based."
+                    )
+        # --- Otak Gemini (v3) kalau API key ada ---
+        if trace is None and not reply_text and brain_mode in ("auto", "gemini") and has_api_key():
             print("Agen: Otak Gemini aktif, saya tanya dulu ke Gemini...")
             brain = ask_gemini(text, lessons_now, history, last_url=last_url)
             if brain.get("error"):
