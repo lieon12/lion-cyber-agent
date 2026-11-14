@@ -10,7 +10,26 @@ tetap menuruti Lion, bukan menuruti modelnya sendiri.
 import os
 from urllib.parse import urlparse
 
-ALLOWED_TOOLS = {"fetch_url", "search_web", "check_site_basic", "sql_scan"}
+ALLOWED_TOOLS = {
+    "fetch_url",
+    "search_web",
+    "check_site_basic",
+    "sql_scan",
+    "scan_sql",
+    # Skill Kumar (v4): make.fun (read-only), GitHub (cari/baca/vetting),
+    # evaluasi diri. Submit entry dan adopsi tool GitHub TIDAK ada di sini —
+    # keduanya langkah yang diawasi dan butuh persetujuan Lion.
+    "list_open_competitions",
+    "competition_status",
+    "my_entry_status",
+    "search_github_tools",
+    "read_repo_file",
+    "vet_tool",
+    "run_self_eval",
+}
+# NOTE 2026-11-14: "xss_scan" dan "scan_xss" DIHAPUS dari daftar ini —
+# tool XSS belum disetujui Lion (draft lokal di tools/xss_scan.py saja),
+# jadi validator menolaknya sampai ia setuju.
 
 FORBIDDEN_PAYLOAD = ["drop ", "delete ", "update ", "insert ", "truncate ", "; drop", "or 1=1;"]
 

@@ -1,14 +1,18 @@
-# lion-cyber-agent
+# lion-cyber-agent — Kumar
 
 Agen AI kecil untuk coding dan keamanan siber — dibuat Lion bersama bokone.
+Nama agen ini: **Kumar**.
 
-Tujuan: menulis kode yang aman, lalu menemukan celah di **website sendiri** untuk diperbaiki (defensive security).
+Tujuan: menulis kode yang aman, lalu menemukan celah di **website sendiri** untuk diperbaiki (defensive security) — plus, sejak v4, connect ke layanan lain (make.fun), mengambil tool dari GitHub, dan menilai dirinya sendiri.
 
 ## Yang bisa dilakukan agen ini
 
 1. **Menulis kode aman** — pakai prepared statement, hashing password, validasi input.
 2. **Memeriksa website lewat internet** — cari di web, buka URL, baca isi halaman, cek dasar keamanan (HTTPS, header).
 3. **Menulis tool-nya sendiri** — kalau belum punya tool untuk suatu pengecekan, agen menulis tool Python-nya, menjalankannya di sandbox, membaca hasilnya, lalu memperbaiki tool itu.
+4. **Connect ke make.fun** — lihat bounty yang buka, cek status kompetisi dan entry sendiri (read-only; submit tetap butuh persetujuan Lion). Lihat `docs/kumar-skills.md`.
+5. **Mengambil tool dari GitHub** — cari repo tool, baca kodenya, vetting dulu sebelum dipakai (adopsi tool tetap butuh persetujuan Lion).
+6. **Menilai dirinya sendiri** — jalankan tool-nya ke target yang diizinkan, bandingkan dengan temuan yang sudah diketahui, laporkan skor evaluasi diri.
 
 Contoh: belum paham cara scan SQL injection → agen menulis `tools/sql_scan.py`, menjalankannya ke website sendiri, lalu melaporkan hasilnya.
 
@@ -17,16 +21,21 @@ Contoh: belum paham cara scan SQL injection → agen menulis `tools/sql_scan.py`
 ```
 agent/          # agen + tools internet
   agent.py      # loop: pikir -> pilih tool -> jalankan -> simpulkan
-  tools.py      # search_web, fetch_url, check_site_basic, scan_sql
+  tools.py      # search_web, fetch_url, check_site_basic, scan_sql + wrapper skill Kumar
   chat.py       # CHAT v3: ngobrol seperti AI biasa (python -m agent.chat)
   brain.py      # Otak Gemini v3 (REST API, tanpa SDK tambahan)
   validator.py  # Validator: kode yang menegakkan aturan Lion
   system_prompt.md # Instruksi ketat untuk model
   memory.py     # pelajaran + riwayat chat
-  lessons.md    # pelajaran dari kesalahan, dibaca sebelum tugas baru (kini 6 pelajaran)
+  lessons.md    # pelajaran dari kesalahan, dibaca sebelum tugas baru (kini 12 pelajaran)
   main.py       # CLI lama, sekali jalan (legacy)
 tools/
   sql_scan.py   # contoh tool scan SQL injection (aman, non-destruktif)
+  makefun.py    # skill Kumar: API make.fun read-only (list kompetisi, status entry)
+  github_tools.py # skill Kumar: cari/baca/vetting tool dari GitHub (tanpa eksekusi)
+  self_eval.py  # skill Kumar: evaluasi diri ke target yang diizinkan
+docs/
+  kumar-skills.md # penjelasan skill Kumar v4 (make.fun, GitHub, evaluasi diri)
 dataset/
   dataset.jsonl # contoh dataset coding + keamanan siber (OWASP Top 10)
   mistake_lessons.jsonl # contoh salah -> benar, untuk belajar dari kesalahan
@@ -139,4 +148,4 @@ Format JSONL, satu contoh per baris:
 {"instruction": "...", "input": "...", "output": "..."}
 ```
 
-Lihat `dataset/dataset.jsonl` untuk 20 contoh pertama: SQL injection, XSS, CSRF, auth, dan secure coding.
+Lihat `dataset/dataset.jsonl` untuk 29 contoh pertama: SQL injection, XSS, CSRF, auth, dan secure coding — plus 9 contoh skill Kumar (make.fun, GitHub, evaluasi diri).

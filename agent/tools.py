@@ -94,3 +94,60 @@ def check_site_basic(url):
         findings.append("Tidak ada header X-Content-Type-Options.")
     result["findings"] = findings
     return result
+
+
+# ---- Skill Kumar (v4): make.fun, GitHub, evaluasi diri ----
+# NOTE 2026-11-14: scan_xss DIHAPUS dari file ini — tool XSS belum
+# disetujui Lion (draft-nya masih di tools/xss_scan.py, lokal saja,
+# belum di repo). Kalau ia setuju, kembalikan fungsi scan_xss di sini
+# + daftarkan di agent/agent.py dan agent/validator.py.
+# Modul-modul di tools/ dimuat dengan importlib seperti scan_sql,
+# karena tools/ bukan package Python.
+
+_TOOL_MODULES = {}
+
+
+def _tool_module(name, filename):
+    if name not in _TOOL_MODULES:
+        spec = importlib.util.spec_from_file_location(
+            f"lion_{name}", Path(__file__).resolve().parent.parent / "tools" / filename
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _TOOL_MODULES[name] = module
+    return _TOOL_MODULES[name]
+
+
+def list_open_competitions():
+    """Daftar kompetisi make.fun yang sedang buka (read-only, butuh MAKEFUN_API_KEY)."""
+    return _tool_module("makefun", "makefun.py").list_open_competitions()
+
+
+def competition_status(slug):
+    """Status satu kompetisi make.fun berdasarkan slug (read-only)."""
+    return _tool_module("makefun", "makefun.py").competition_status(slug)
+
+
+def my_entry_status(submission_id):
+    """Status satu entry make.fun milik akun ini (read-only)."""
+    return _tool_module("makefun", "makefun.py").my_entry_status(submission_id)
+
+
+def search_github_tools(query, limit=5):
+    """Cari repo tool publik di GitHub (read-only, tanpa auth)."""
+    return _tool_module("github_tools", "github_tools.py").search_github_tools(query, limit=limit)
+
+
+def read_repo_file(owner, repo, path, ref=None):
+    """Baca satu file dari repo publik GitHub (read-only)."""
+    return _tool_module("github_tools", "github_tools.py").read_repo_file(owner, repo, path, ref=ref)
+
+
+def vet_tool(repo_full_name):
+    """Vetting repo GitHub sebelum dipakai sebagai tool (read-only, bukan izin pakai)."""
+    return _tool_module("github_tools", "github_tools.py").vet_tool(repo_full_name)
+
+
+def run_self_eval():
+    """Evaluasi diri: uji tool sendiri ke target yang diizinkan, lalu nilai."""
+    return _tool_module("self_eval", "self_eval.py").run_self_eval()

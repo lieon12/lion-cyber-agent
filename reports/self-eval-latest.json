@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-14T00:45:56.396457Z",
+  "score_pct": 90,
+  "passed_checks": 9,
+  "total_checks": 10,
+  "unreachable": [
+    "http://testphp.vulnweb.com/"
+  ],
+  "targets": {
+    "https://www.verifydeal.site/": {
+      "target": "https://www.verifydeal.site/",
+      "status": "ok",
+      "passed": 5,
+      "total": 5,
+      "checks": [
+        {
+          "name": "status_200",
+          "passed": true
+        },
+        {
+          "name": "hsts_present",
+          "passed": true
+        },
+        {
+          "name": "csp_missing",
+          "passed": true
+        },
+        {
+          "name": "xfo_missing",
+          "passed": true
+        },
+        {
+          "name": "xcto_missing",
+          "passed": true
+        }
+      ]
+    },
+    "https://demo.owasp-juice.shop/": {
+      "target": "https://demo.owasp-juice.shop/",
+      "status": "ok",
+      "passed": 2,
+      "total": 3,
+      "checks": [
+        {
+          "name": "status_200",
+          "passed": false
+        },
+        {
+          "name": "hsts_missing",
+          "passed": true
+        },
+        {
+          "name": "csp_missing",
+          "passed": true
+        }
+      ]
+    },
+    "http://testphp.vulnweb.com/": {
+      "target": "http://testphp.vulnweb.com/",
+      "status": "unreachable",
+      "passed": 0,
+      "total": 0,
+      "checks": [],
+      "error": "HTTPConnectionPool(host='hatch-egress-proxy', port=3128): Max retries exceeded with url: http://testphp.vulnweb.com/ (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))"
+    },
+    "sql_scan:https://www.verifydeal.site/": {
+      "target": "https://www.verifydeal.site/",
+      "param": "q",
+      "status": "ok",
+      "passed": 2,
+      "total": 2,
+      "checks": [
+        {
+          "name": "baseline_200",
+          "passed": true
+        },
+        {
+          "name": "no_strong_signal",
+          "passed": true
+        }
+      ]
+    }
+  },
+  "note": "Skor evaluasi diri ini terpisah dari persen Coding/Hacking di agent/capabilities.py. 'Tidak ada sinyal kuat' bukan berarti aman."
+}
