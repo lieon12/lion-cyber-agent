@@ -30,6 +30,10 @@ CODING_TOPICS = [
 ]
 
 OWASP_COVERED = ["secure headers", "sql injection"]  # ada tool/uji yang jalan
+# NOTE: "cross-site scripting (xss)" DIHAPUS sementara 2026-11-13 — tool scan_xss
+# belum disetujui Lion (hanya ada di mesin lab, belum di repo), jadi tidak
+# boleh dihitung sampai ia menyetujui. Kalau ia setuju, tambahkan kembali
+# "cross-site scripting (xss)" di sini + "scan_xss" di _count_tools().
 
 
 def _count_dataset():
@@ -50,13 +54,21 @@ def _count_lessons():
 
 
 def _count_tools():
-    # Tool internet yang terdaftar di agent/tools.py + tools/sql_scan.py
+    # Tool internet yang terdaftar di agent/tools.py + tools/sql_scan.py.
+    # "scan_xss" DIHAPUS sementara 2026-11-13 (lihat OWASP_COVERED di atas):
+    # tools/xss_scan.py belum disetujui Lion dan belum ada di repo.
     tools = ["fetch_url", "search_web", "check_site_basic", "scan_sql"]
     return tools
 
 
 def _last_report_stats():
-    reports = sorted((ROOT / "reports").glob("*.json"))
+    # Hanya laporan harian (YYYY-MM-DD.json) — file lain di reports/
+    # seperti self-eval-latest.json tidak punya per_target dan akan
+    # membuat situs/temuan terhitung 0 (bug 2026-11-15: Hacking 10%).
+    reports = sorted(
+        p for p in (ROOT / "reports").glob("*.json")
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}\.json", p.name)
+    )
     if not reports:
         return 0, 0
     data = json.loads(reports[-1].read_text(encoding="utf-8"))
