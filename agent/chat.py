@@ -31,6 +31,7 @@ riwayat di .agent_memory.json (lokal, tidak di-commit), dan
 mencatat kesalahan baru sebagai pelajaran.
 """
 import argparse
+import os
 import sys
 
 from .agent import TOOLS, extract_url, is_sql_scan, run
@@ -148,6 +149,13 @@ def main():
             if last_url:
                 break
     print("=== lion-cyber-agent — chat ===")
+    print(f"Otak: {brain_mode}" + (f" (adapter: {args.adapter})" if brain_mode == "local" else ""))
+    if brain_mode == "local" and not os.path.isdir(args.adapter):
+        print(
+            "Peringatan: folder adapter tidak ditemukan — "
+            "otak lokal akan fallback ke rule-based. "
+            "Upload/unzip folder kumar-lora-trial ke root repo dulu."
+        )
     print("Ketik perintah seperti ngobrol biasa. Ketik /bantuan, /pelajaran, atau exit.")
     if lessons:
         print(f"\nSaya ingat {len(lessons)} pelajaran dari kesalahan sebelumnya.")
