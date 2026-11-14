@@ -41,3 +41,13 @@ Batch kedua (60 contoh, 2026-11-14, total 113):
 
 Target berikutnya: tambah sampai 500-1000 contoh yang bagus, fokus ke
 stack website kamu. Kualitas lebih penting dari jumlah.
+
+Batch ketiga (18 contoh, 2026-11-14, total 131) — perbaikan format
+prompt otak lokal: `decide()` di `agent/local_brain.py` sekarang
+memakai system prompt yang SAMA PERSIS dengan saat latih (bukan
+`system_prompt.md` + daftar tool yang panjang). Contoh baru ini
+fokus ke kasus yang gagal: "cek \<URL\>" → check_site_basic dengan
+berbagai frasa dan domain yang diizinkan, scan_sql dengan param
+realistis (q, username), follow-up "lanjut ..." yang memakai URL
+terakhir, entry_rank dengan submission id / handle, dan 3 pertanyaan
+konsep yang harus dijawab dengan TEKS (tanpa tool).

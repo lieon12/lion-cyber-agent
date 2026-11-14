@@ -42,22 +42,13 @@ from .validator import validate_tool_call
 BASE_MODEL = "Qwen/Qwen2.5-Coder-0.5B"
 DEFAULT_ADAPTER_DIR = "./kumar-lora-trial"
 
-# Deskripsi tool untuk prompt otak lokal. Nama HARUS sama persis
-# dengan kunci di agent.agent.TOOLS (yang dipanggil agen).
-TOOL_DESCRIPTIONS = {
-    "check_site_basic": "cek HTTPS dan header keamanan sebuah URL (hanya domain yang diizinkan)",
-    "fetch_url": "ambil isi sebuah URL (hanya domain yang diizinkan)",
-    "search_web": "cari informasi terbaru di internet",
-    "scan_sql": "uji parameter URL dengan payload SQL injection yang aman (non-destruktif)",
-    "entry_rank": "cek peringkat entry make.fun di leaderboard (data live, jangan ditebak)",
-    "competition_status": "cek status satu kompetisi make.fun",
-    "my_entry_status": "cek status satu entry make.fun milik akun ini",
-    "list_open_competitions": "daftar kompetisi make.fun yang sedang buka",
-    "search_github_tools": "cari tool publik di GitHub",
-    "read_repo_file": "baca satu file dari repo publik GitHub",
-    "vet_tool": "nilai keamanan sebuah repo GitHub sebelum dipakai",
-    "run_self_eval": "jalankan evaluasi diri agen ke target yang diizinkan",
-}
+# System prompt yang dipakai decide() dan answer_with_context().
+# HARUS sama persis dengan SYSTEM di training/kumar-trial-train.ipynb —
+# adapter hanya pernah melihat prompt ini saat latih. Prompt yang lebih
+# panjang (mis. system_prompt.md + daftar tool + instruksi JSON) TIDAK
+# PERNAH dilihat adapter saat latih, jadi ia tidak meresponsnya dengan
+# benar — buktinya v2 tetap mengulang rambel v1 dan salah pilih tool.
+TRAINING_SYSTEM_PROMPT = "Kamu adalah Kumar, asisten AI keamanan siber dan coding milik Lion. Jawablah dengan singkat dan benar."
 
 # Argumen wajib per tool — kalau tidak ada, keputusan dianggap
 # tidak lengkap dan jatuh ke fallback (bukan ditebak-tebak).
@@ -78,11 +69,6 @@ _TOOL_ALIASES = {"sql_scan": "scan_sql"}
 
 class LocalBrainError(Exception):
     """Otak lokal tidak bisa dipakai (adapter hilang / pustaka belum terpasang)."""
-
-
-def _load_system_prompt():
-    p = Path(__file__).resolve().parent / "system_prompt.md"
-    return p.read_text(encoding="utf-8") if p.exists() else "Kamu agen keamanan siber."
 
 
 def parse_tool_call(text):
@@ -195,13 +181,6 @@ class LocalBrain:
         )
         return self.tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True)
 
-    def _tool_list_text(self):
-        lines = []
-        for name in TOOLS:
-            desc = TOOL_DESCRIPTIONS.get(name, "")
-            lines.append(f'- {name}: {desc}' if desc else f"- {name}")
-        return "\n".join(lines)
-
     def decide(self, task, last_url=None):
         """Putuskan: jalankan tool, jawab langsung, atau fallback.
 
@@ -209,20 +188,17 @@ class LocalBrain:
         ("fallback", alasan). Fallback berarti chat.py harus memakai
         mode rule-based untuk tugas ini.
         """
-        system = (
-            _load_system_prompt()
-            + "\n\nTool yang bisa kamu panggil (pakai nama persis ini):\n"
-            + self._tool_list_text()
-            + "\n\nKalau butuh tool, jawab HANYA dengan satu baris JSON, "
-            'contoh: {"tool": "check_site_basic", "args": {"url": "https://..."}}'
-            + "\nJangan menebak angka live (peringkat, harga, data terbaru): "
-            "panggil tool yang sesuai, jangan jawab dari ingatan."
-        )
+        # Format prompt SAMA PERSIS seperti saat latih (lihat
+        # training/kumar-trial-train.ipynb: format_row): system prompt
+        # pendek yang tetap + user = instruction + input. Adapter TIDAK
+        # pernah melihat daftar tool atau instruksi JSON saat latih —
+        # nama-nama tool ia pelajari dari contoh-contoh tool-calling
+        # di dataset. Validator tetap yang menegakkan keamanan.
         user = task.strip()
         if last_url:
             user += f"\n\nURL terakhir yang dicek: {last_url}"
         messages = [
-            {"role": "system", "content": system},
+            {"role": "system", "content": TRAINING_SYSTEM_PROMPT},
             {"role": "user", "content": user},
         ]
         try:
@@ -283,17 +259,16 @@ class LocalBrain:
     def answer_with_context(self, task, tool_result):
         """Minta adapter merangkum hasil tool jadi jawaban singkat
         bahasa Indonesia. Kembalikan "" kalau gagal."""
-        system = (
-            "Kamu adalah Kumar, asisten AI keamanan siber dan coding milik Lion. "
-            "Rangkum hasil tool berikut untuk user dalam bahasa Indonesia, "
-            "singkat dan jelas. Jangan menambah angka atau fakta yang tidak "
-            "ada di hasil tool."
+        # Bentuk user SAMA seperti baris "merangkum hasil tool" di dataset
+        # (mis. baris 52-53): instruction singkat + input "Hasil tool: ...".
+        user = (
+            "Rangkum hasil pengecekan ini untuk user dalam bahasa Indonesia.\n"
+            f"Hasil tool: {str(tool_result)[:2000]}"
         )
-        user = f"Perintah: {task}\n\nHasil tool:\n{str(tool_result)[:2000]}"
         try:
             return self._generate(
                 [
-                    {"role": "system", "content": system},
+                    {"role": "system", "content": TRAINING_SYSTEM_PROMPT},
                     {"role": "user", "content": user},
                 ]
             ).strip()
