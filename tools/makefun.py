@@ -16,6 +16,7 @@ Endpoint yang dipakai (sudah terbukti dipakai 2026-11-14):
 - GET /api/competitions?status=open (daftar kompetisi buka)
 - GET /api/competitions/<slug> (detail satu kompetisi)
 - GET /api/submissions/<id>/status (status satu entry)
+- GET /api/competitions/<slug>/leaderboard (peringkat entry, dipakai entry_rank)
 """
 import os
 
@@ -153,4 +154,93 @@ def my_entry_status(submission_id):
         "problem": {"title": problem.get("title"), "type": problem.get("type")} if problem else None,
         "deadlines": data.get("deadlines", {}),
         "raw": data,
+    }
+
+
+def _judge_record(entry):
+    """Ambil rekor juri (menang/seri/kalah) dari satu baris leaderboard."""
+    judge = entry.get("judge")
+    if not isinstance(judge, dict):
+        judge = (entry.get("performance") or {}).get("judge") or {}
+    if not isinstance(judge, dict):
+        return {}
+    return judge
+
+
+def entry_rank(slug, submission_id=None, handle=None):
+    """Peringkat satu entry di leaderboard kompetisi make.fun.
+
+    GET /api/competitions/<slug>/leaderboard. Cari entry akun ini
+    berdasarkan submission id atau handle. Kembalikan rank, prize_rank,
+    rekor juri (menang/seri/kalah/pertandingan), total entry yang
+    terdaftar, dan baris peringkat 100 (batas zona hadiah).
+
+    Kalau slug tidak disebut tapi submission id ada, slug dicari dulu
+    lewat my_entry_status. Kalau entry tidak ada di leaderboard,
+    katakan begitu — peringkat tidak pernah dikarang.
+    """
+    slug = (slug or "").strip().strip("/")
+    submission_id = (submission_id or "").strip() or None
+    handle = (handle or "").strip().lstrip("@") or None
+    if not slug and submission_id:
+        slug = (my_entry_status(submission_id).get("competition") or "").strip()
+    if not slug:
+        raise MakefunError("Slug kompetisi kosong. Contoh: food-picture-01")
+    if not submission_id and not handle:
+        raise MakefunError(
+            "Untuk cek peringkat, berikan submission id entry-nya atau handle akun "
+            "(contoh: entry_rank('food-picture-01', submission_id='01a1d7b5-...') "
+            "atau entry_rank('food-picture-01', handle='qjack'))."
+        )
+    data = _get(f"/api/competitions/{slug}/leaderboard")
+    if not isinstance(data, dict):
+        raise MakefunError(f"Leaderboard '{slug}' tidak ditemukan di make.fun.")
+    entries = data.get("entries", [])
+    if not isinstance(entries, list):
+        entries = []
+    mine = None
+    for e in entries:
+        if not isinstance(e, dict):
+            continue
+        if submission_id and e.get("submission_id") == submission_id:
+            mine = e
+            break
+        if handle and (e.get("handle") or "").lower() == handle.lower():
+            mine = e
+            break
+    if mine is None:
+        raise MakefunError(
+            f"Entry tidak ada di leaderboard '{slug}' — mungkin belum dinilai, "
+            f"atau submission id/handle salah. Peringkat tidak bisa dikarang."
+        )
+    judge = _judge_record(mine)
+    cutoff = None
+    for e in entries:
+        if isinstance(e, dict) and e.get("rank") == 100:
+            cj = _judge_record(e)
+            cutoff = {
+                "rank": 100,
+                "handle": e.get("handle"),
+                "wins": cj.get("wins"),
+                "draws": cj.get("draws"),
+                "losses": cj.get("losses"),
+                "matches": cj.get("matches"),
+            }
+            break
+    rank = mine.get("rank")
+    return {
+        "slug": slug,
+        "submission_id": mine.get("submission_id"),
+        "handle": mine.get("handle"),
+        "title": mine.get("title"),
+        "rank": rank,
+        "prize_rank": mine.get("prize_rank"),
+        "wins": judge.get("wins"),
+        "draws": judge.get("draws"),
+        "losses": judge.get("losses"),
+        "matches": judge.get("matches"),
+        "total_entries": len(entries),
+        "in_prize_zone": isinstance(rank, int) and rank <= 100,
+        "rank_100_cutoff": cutoff,
+        "page_url": f"https://make.fun/bounty/{slug}",
     }

@@ -10,6 +10,7 @@ import re
 from .tools import (
     check_site_basic,
     competition_status,
+    entry_rank,
     fetch_url,
     list_open_competitions,
     my_entry_status,
@@ -32,6 +33,7 @@ TOOLS = {
     "list_open_competitions": list_open_competitions,
     "competition_status": competition_status,
     "my_entry_status": my_entry_status,
+    "entry_rank": entry_rank,
     "search_github_tools": search_github_tools,
     "read_repo_file": read_repo_file,
     "vet_tool": vet_tool,
@@ -105,6 +107,21 @@ def extract_submission_id(task):
     return m.group(0) if m else None
 
 
+def extract_handle(task):
+    """Ambil handle akun ('@qjack', 'handle qjack', 'akun qjack'), atau None."""
+    m = re.search(r"@([A-Za-z0-9_.\-]+)", task)
+    if m:
+        return m.group(1)
+    m = re.search(r"\b(?:handle|akun)\s+([A-Za-z0-9_.\-]+)", task, re.IGNORECASE)
+    return m.group(1) if m else None
+
+
+def is_rank_query(task):
+    """True kalau user minta peringkat/posisi entry di leaderboard."""
+    t = task.lower()
+    return any(k in t for k in ("peringkat", "rank", "posisi", "ranking"))
+
+
 def extract_slug(task):
     """Ambil slug kompetisi dari URL /bounty/<slug> atau kata bersambung strip, atau None."""
     m = re.search(r"/bounty/([a-z0-9]+(?:-[a-z0-9]+)*)", task, re.IGNORECASE)
@@ -159,8 +176,42 @@ def plan(task, last_url=None):
         steps.append(("run_self_eval", {}))
         return steps
 
+    # Peringkat leaderboard — kata peringkat/rank/posisi + slug,
+    # submission id, atau handle sudah cukup, tanpa harus menyebut
+    # make.fun. Kalau slug tidak disebut tapi submission id ada,
+    # entry_rank mencari slug-nya sendiri lewat my_entry_status.
+    if is_rank_query(task) and (
+        extract_slug(task) or extract_submission_id(task) or extract_handle(task)
+    ):
+        steps.append(
+            (
+                "entry_rank",
+                {
+                    "slug": extract_slug(task) or "",
+                    "submission_id": extract_submission_id(task),
+                    "handle": extract_handle(task),
+                },
+            )
+        )
+        return steps
+
     # make.fun — bounty / kompetisi. Bukan pencarian web umum.
     if is_makefun(task):
+        # Peringkat leaderboard dulu — sebelum cek status entry biasa.
+        # Kalau slug tidak disebut tapi submission id ada, entry_rank
+        # mencari slug-nya sendiri lewat my_entry_status.
+        if is_rank_query(task):
+            steps.append(
+                (
+                    "entry_rank",
+                    {
+                        "slug": extract_slug(task) or "",
+                        "submission_id": extract_submission_id(task),
+                        "handle": extract_handle(task),
+                    },
+                )
+            )
+            return steps
         submission_id = extract_submission_id(task)
         if submission_id:
             steps.append(("my_entry_status", {"submission_id": submission_id}))

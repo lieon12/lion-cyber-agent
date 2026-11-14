@@ -22,6 +22,7 @@ ALLOWED_TOOLS = {
     "list_open_competitions",
     "competition_status",
     "my_entry_status",
+    "entry_rank",
     "search_github_tools",
     "read_repo_file",
     "vet_tool",

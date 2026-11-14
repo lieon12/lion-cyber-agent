@@ -133,6 +133,13 @@ def my_entry_status(submission_id):
     return _tool_module("makefun", "makefun.py").my_entry_status(submission_id)
 
 
+def entry_rank(slug, submission_id=None, handle=None):
+    """Peringkat satu entry make.fun di leaderboard (read-only)."""
+    return _tool_module("makefun", "makefun.py").entry_rank(
+        slug, submission_id=submission_id, handle=handle
+    )
+
+
 def search_github_tools(query, limit=5):
     """Cari repo tool publik di GitHub (read-only, tanpa auth)."""
     return _tool_module("github_tools", "github_tools.py").search_github_tools(query, limit=limit)
