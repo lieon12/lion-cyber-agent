@@ -94,3 +94,24 @@ format campuran berarti model bisa menjawab dengan salah satu
 gaya. ~18 contoh penalaran tidak akan membuat model 0.5B menjadi
 penalar yang dalam — yang diharapkan adalah generalisasi yang
 lebih baik daripada hafalan nama tool.
+
+Panen 1 — ilmu dari pekerjaan nyata (23 contoh, 2026-11-15,
+total 185). Perintah Lion: semua yang bokone kerjakan dijadikan
+ilmu untuk Kumar. Detail sistem dan isinya ada di
+`dataset/HARVEST.md`. Isi panen ini:
+- Ringkasan prosa (5): scan_sql tanpa sinyal, Juice Shop 503 → 200,
+  testphp tidak terjangkau, rangkuman lab 2026-11-15 — output PROSA,
+  bukan JSON (memperbaiki cacat v4: ringkasan keluar sebagai
+  {"tool": "report", ...}).
+- Git / alur kerja (5): git pull terhalang adapter lokal, membaca
+  log latih v4 (162/162, loss 3.993 → 1.909), arti pola loss, urutan
+  ganti folder adapter, memastikan otak lokal yang jalan.
+- Lab / keamanan (5): 3 header hilang di verifydeal, Juice Shop
+  503 → 200 bukan perbaikan, testphp tidak terjangkau, scan_sql
+  tanpa sinyal bukan bukti aman, kenapa ringkasan v4 jadi JSON.
+- Bounty / uang (5): jendela submit coin-launch-01 (08:00–08:30
+  WITA), persiapan aggregator, masuk paling awal github-core-clone,
+  token-radar-01 $1325 (pantau), tolak polymarket-faa-attribution-02.
+- Prinsip (1): arti "berfikir, bukan menghafal" dalam praktik.
+- Keputusan tool dengan penalaran + JSON (2): cek ulang Juice Shop,
+  lanjut scan SQL Juice Shop.
