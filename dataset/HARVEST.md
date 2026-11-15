@@ -254,6 +254,69 @@ dengan pengukuran bokone (0,328) — 3 baris ditulis ulang (baris 2, 6,
 luput dari cek awal bokone (Vote Baik, PINTU RAHASIA) — terverifikasi
 langsung di script.js.
 
+## Panen 7 — batch v10 + tool verifikasi password (24 contoh, 2026-11-16, total 354)
+
+Perintah Lion (2026-11-16 07:05 WITA): latih Kumar MEMASUKKAN password
+admin ke verifydeal.site — tes yang disepakati kemarin (15 Nov 14:27
+WITA). Pekerjaan nyata pagi ini: probing API (read-only + probe tulis
+yang pasti ditolak), tool baru, perbaikan batch v10, evaluasi hari ini.
+
+- Mekanisme verifikasi yang aman (diprobing dari lab, tidak ada data
+  yang berubah): server memeriksa password DULU, sebelum validasi lain
+  — DELETE /api/data/-1 tanpa password → 401 "Akses Ditolak! Password
+  salah."; POST /api/data body {} tanpa/salah password → 401. Jadi
+  password BENAR + body {} → lolos auth, lalu GAGAL validasi body
+  (422) karena {} tidak punya field wajib — TIDAK ADA data yang
+  ditulis. 401 = password salah, 422/400 = password DITERIMA dan
+  tidak ada yang berubah. Tool baru verify_admin_password
+  (tools/admin_password.py) memakai persis mekanisme ini: password
+  HANYA dari environment (VERIFYDEAL_ADMIN_PASSWORD di .env Codespace,
+  Lion yang mengetiknya sendiri), tidak pernah dicetak/di-log, tidak
+  pernah lewat chat/repo/dataset. Wiring: tools, planner (cabang
+  SEBELUM find_password_entry, tanpa last_url — password ini khusus
+  verifydeal), validator, alias otak (verify_password,
+  cek_password_admin, masukkan_password), summarize. capabilities.py
+  TIDAK diubah — ini cek kredensial, bukan cek keamanan pass/fail
+  ala OWASP (alasan yang sama seperti find_password_entry).
+  Tes live bokone: env kosong → ValueError jelas; password SALAH dummy
+  → 401, accepted False, changed False. Jalur 422 (password benar)
+  HANYA bisa diuji Lion di Codespace dengan password asli — itu juga
+  bukti akhir .env-nya benar.
+- Batch v10 diperbaiki (12): draf latar belakang (12 baris) ternyata
+  punya baris password hampir identik (Jaccard prosa maks 0,479 —
+  naskah hafalan, sama seperti draf v8 lama yang ditolak). Ditulis
+  ulang: baris password 6–9 jadi skenario beda (pengaturan ganti
+  password; prompt hapus akun; login subdomain auth; situs brosur
+  statis tanpa login — jawab jujur kosong) dan baris entry_rank 1–5
+  ditulis ulang dengan sudut beda (identifikasi entry; rekor juri;
+  patokan zona hadiah; field prize_rank; entry tidak ditemukan).
+  Isi akhir: 6 entry_rank nama persis (food-picture, aggregator,
+  forge, zona hadiah, prize_rank, belum ada di leaderboard) + 4
+  find_password_entry vs 2 search_web (cari TEMPAT password di URL
+  = periksa situs itu; cari TUTORIAL / apa itu = cari info umum).
+- Batch admin-password (12): kapan memanggil verify_admin_password
+  (diminta memasukkan password admin verifydeal.site; password dari
+  .env; URL harus verifydeal.site; baca kode status 401 vs 422),
+  kontras cari-vs-verifikasi, rangkuman hasil (diterima 422; salah
+  401 → berhenti, jangan menebak, cek .env sendiri; .env kosong →
+  tambahkan var, jangan tulis di chat), konsep tanpa tool (2),
+  situs lain (jangan pakai ulang password verifydeal), anti-tebak
+  (tebakan beruntun = pola brute force), mekanisme (kenapa verifikasi
+  tidak mengubah data). 0 baris berisi NILAI password (hanya nama
+  var, 7×).
+- Evaluasi hari ini (file evaluasi-kumar-besok.md, disusun latar
+  belakang 15 Nov, dibaca + dinilai akurat oleh bokone): 7 tes
+  (cek situs, peringkat, cari tempat password, GitHub, cari uang,
+  cari info umum, anti-hafalan) + tes 8 memasukkan password.
+
+Validasi (independen oleh bokone, bukan hanya laporan builder):
+JSONL valid, kunci tepat, 0 duplikat (internal + vs 330 baris lama),
+Jaccard PROSA maks 0,289 (v10) dan 0,290 (admin-password), 0
+"Prinsipnya", 0 CJK, semua tool-call JSON valid lewat parse_tool_call
+ASLI (v10: 6 entry_rank + 4 find_password_entry + 2 search_web;
+admin: 3 verify_admin_password + 1 find_password_entry), 0 tool
+karangan, 0 nilai password, Bahasa Indonesia.
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang

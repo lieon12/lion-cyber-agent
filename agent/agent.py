@@ -20,6 +20,7 @@ from .tools import (
     scan_sql,
     search_github_tools,
     search_web,
+    verify_admin_password,
     vet_tool,
 )
 
@@ -29,6 +30,7 @@ TOOLS = {
     "check_site_basic": check_site_basic,
     "scan_sql": scan_sql,
     "find_password_entry": find_password_entry,
+    "verify_admin_password": verify_admin_password,
     # Skill Kumar (v4) — lihat tools/makefun.py, tools/github_tools.py,
     # tools/self_eval.py. NOTE: scan_xss DIHAPUS 2026-11-14 — tool XSS
     # belum disetujui Lion (draft lokal di tools/xss_scan.py saja).
@@ -139,6 +141,37 @@ def is_rank_query(task):
     """True kalau user minta peringkat/posisi entry di leaderboard."""
     t = task.lower()
     return any(k in t for k in ("peringkat", "rank", "posisi", "ranking"))
+
+
+def is_admin_password(task):
+    """True kalau user minta MASUKKAN / VERIFIKASI password admin ke
+    sebuah situs — BUKAN pertanyaan konsep tentang password.
+
+    Picu frasa aksi ("masukkan password", "cek password admin",
+    "verifikasi password", ...) + sebutan situs (URL atau "verifydeal").
+    Tanpa sebutan situs, ini bukan perintah verifikasi yang jelas.
+    Pertanyaan konsep ("apa itu password yang kuat?", "bagaimana cara
+    membuat password yang aman?") TIDAK memicu tool ini — itu dijawab
+    langsung dengan prosa, tanpa tool. Perhatian: "memasukkan" TIDAK
+    sama dengan "masukkan" — pola di bawah memakai \\b supaya
+    "bagaimana cara memasukkan password" (tutorial) tidak ikut terpicu.
+    """
+    t = task.lower()
+    if re.search(
+        r"\b(apa itu|apakah|bagaimana cara membuat|kenapa|mengapa)\b.*\bpassword\b", t
+    ):
+        return False
+    action = (
+        r"\bmasukkan password\b",
+        r"\bcek password admin\b",
+        r"\bverifikasi password\b",
+        r"\bperiksa password admin\b",
+        r"\bcoba password admin\b",
+        r"\buji password admin\b",
+    )
+    if not any(re.search(a, t) for a in action):
+        return False
+    return bool(extract_url(task) or "verifydeal" in t)
 
 
 def is_password_entry(task):
@@ -287,6 +320,22 @@ def plan(task, last_url=None):
                 steps.append(("read_repo_file", {"owner": repo.split("/")[0], "repo": repo.split("/")[1], "path": path}))
                 return steps
         steps.append(("search_github_tools", {"query": task}))
+        return steps
+
+    # Verifikasi password admin — SEBELUM cabang find_password_entry,
+    # karena "cek password admin" juga mengandung kata "cek"+"password"
+    # dan akan salah dibaca sebagai pencarian tempat password. URL
+    # diambil dari tugas itu sendiri (atau verifydeal kalau disebut
+    # namanya) — JANGAN pakai last_url: password ini khusus
+    # verifydeal.site, situs terakhir yang dicek bisa situs lain.
+    if is_admin_password(task):
+        site_url = extract_url(task)
+        if not site_url and "verifydeal" in t:
+            site_url = "https://www.verifydeal.site/"
+        if site_url:
+            steps.append(("verify_admin_password", {"url": site_url}))
+        # Tanpa URL, kembalikan langkah kosong: chat.py akan menanyakan
+        # URL-nya ke user, bukan malah memverifikasi ke situs yang salah.
         return steps
 
     # Cari tempat memasukkan password — sebelum cabang umum "http",

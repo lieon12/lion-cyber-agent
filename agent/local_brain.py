@@ -33,6 +33,7 @@ from .agent import (
     extract_slug,
     extract_submission_id,
     extract_url,
+    is_admin_password,
     is_github_tool,
     is_makefun,
     is_password_entry,
@@ -87,6 +88,9 @@ _TOOL_ALIASES = {
     "cari_password": "find_password_entry",
     "cek_password": "find_password_entry",
     "find_login_form": "find_password_entry",
+    "verify_password": "verify_admin_password",
+    "cek_password_admin": "verify_admin_password",
+    "masukkan_password": "verify_admin_password",
 }
 
 
@@ -253,7 +257,11 @@ class LocalBrain:
             is_continuation = any(
                 k in t for k in ("lanjut", "scan", "cek", "periksa", "uji", "test")
             )
-            if is_continuation and not is_rank:
+            # JANGAN tempel last_url ke tugas verifikasi password admin:
+            # password ini khusus verifydeal.site, sedangkan last_url
+            # bisa situs lain (mis. demo.owasp-juice.shop dari cek
+            # sebelumnya) — model bisa salah kirim password ke sana.
+            if is_continuation and not is_rank and not is_admin_password(task):
                 user += f"\n\nURL terakhir yang dicek: {last_url}"
         messages = [
             {"role": "system", "content": TRAINING_SYSTEM_PROMPT},
@@ -315,6 +323,8 @@ class LocalBrain:
         if is_github_tool(task):
             needs_tool = True
         if is_password_entry(task):
+            needs_tool = True
+        if is_admin_password(task):
             needs_tool = True
         if any(k in t for k in ("cek ", "scan ", "periksa ", "baca ")):
             needs_tool = True

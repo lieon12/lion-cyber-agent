@@ -182,3 +182,15 @@ def find_password_entry(url):
     prompt() + header x-admin-password.
     """
     return _tool_module("password_entry", "password_entry.py").find_password_entry(url)
+
+
+def verify_admin_password(url="https://www.verifydeal.site/"):
+    """Verifikasi password admin verifydeal.site (password dari .env).
+
+    POST /api/data dengan body {} + header x-admin-password. 401 =
+    password salah; 422/400 = password diterima dan TIDAK ADA data
+    yang berubah (body {} tidak valid, tidak bisa tersimpan). Password
+    dibaca dari VERIFYDEAL_ADMIN_PASSWORD di environment — tool ini
+    tidak pernah mencetak atau me-log nilainya.
+    """
+    return _tool_module("admin_password", "admin_password.py").verify_admin_password(url)
