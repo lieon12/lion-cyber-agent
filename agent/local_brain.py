@@ -232,8 +232,21 @@ class LocalBrain:
         # nama-nama tool ia pelajari dari contoh-contoh tool-calling
         # di dataset. Validator tetap yang menegakkan keamanan.
         user = task.strip()
-        if last_url:
-            user += f"\n\nURL terakhir yang dicek: {last_url}"
+        # Baris URL terakhir HANYA ditambahkan bila tugas ini memang
+        # butuh URL (lanjutan/cek/scan tanpa URL sendiri). Kalau
+        # ditambahkan ke SEMUA tugas, adapter terpaku pada URL itu
+        # bahkan saat tugasnya tidak berhubungan — bukti: ujian v6/v7
+        # soal 2, ditanya peringkat malah cek verifydeal lagi. Isi
+        # last_url untuk tool tanpa URL tetap diisi di bawah (kode),
+        # jadi baris ini tidak perlu ada di prompt untuk tugas lain.
+        if last_url and not extract_url(task):
+            t = task.lower()
+            is_rank = any(k in t for k in ("peringkat", "rank", "posisi", "ranking"))
+            is_continuation = any(
+                k in t for k in ("lanjut", "scan", "cek", "periksa", "uji", "test")
+            )
+            if is_continuation and not is_rank:
+                user += f"\n\nURL terakhir yang dicek: {last_url}"
         messages = [
             {"role": "system", "content": TRAINING_SYSTEM_PROMPT},
             {"role": "user", "content": user},
