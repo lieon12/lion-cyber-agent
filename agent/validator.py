@@ -31,12 +31,14 @@ ALLOWED_TOOLS = {
     # verifydeal.site 2026-11-15: titik masuk password bisa lewat
     # prompt() JS, bukan cuma <input type="password">.
     "find_password_entry",
-    # Verifikasi password admin verifydeal.site (2026-11-16): password
-    # dari VERIFYDEAL_ADMIN_PASSWORD di .env, POST /api/data body {}
-    # (tidak valid, tidak bisa tersimpan) — 401 = salah, 422/400 =
-    # diterima tanpa ada yang berubah. Khusus verifydeal.site, situs
-    # Lion sendiri; validator tetap menolak URL di luar ALLOWED_DOMAINS.
-    "verify_admin_password",
+    # Coba password admin verifydeal.site (2026-11-16, koreksi Lion:
+    # Kumar MENCOBA kandidat password umum yang lemah sendiri, bukan
+    # diberi password lewat .env/chat). POST /api/data body {} (tidak
+    # valid, tidak bisa tersimpan) — 401 = ditolak, coba berikutnya;
+    # 422/400 = diterima tanpa ada yang berubah. Maks 20 kandidat.
+    # Khusus verifydeal.site, situs Lion sendiri; validator tetap
+    # menolak URL di luar ALLOWED_DOMAINS.
+    "try_admin_password",
 }
 # NOTE 2026-11-14: "xss_scan" dan "scan_xss" DIHAPUS dari daftar ini —
 # tool XSS belum disetujui Lion (draft lokal di tools/xss_scan.py saja),

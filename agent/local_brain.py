@@ -88,9 +88,10 @@ _TOOL_ALIASES = {
     "cari_password": "find_password_entry",
     "cek_password": "find_password_entry",
     "find_login_form": "find_password_entry",
-    "verify_password": "verify_admin_password",
-    "cek_password_admin": "verify_admin_password",
-    "masukkan_password": "verify_admin_password",
+    "coba_password": "try_admin_password",
+    "try_password": "try_admin_password",
+    "cek_password_admin": "try_admin_password",
+    "masukkan_password": "try_admin_password",
 }
 
 
@@ -257,10 +258,10 @@ class LocalBrain:
             is_continuation = any(
                 k in t for k in ("lanjut", "scan", "cek", "periksa", "uji", "test")
             )
-            # JANGAN tempel last_url ke tugas verifikasi password admin:
+            # JANGAN tempel last_url ke tugas coba password admin:
             # password ini khusus verifydeal.site, sedangkan last_url
             # bisa situs lain (mis. demo.owasp-juice.shop dari cek
-            # sebelumnya) — model bisa salah kirim password ke sana.
+            # sebelumnya) — model bisa salah mencoba password ke sana.
             if is_continuation and not is_rank and not is_admin_password(task):
                 user += f"\n\nURL terakhir yang dicek: {last_url}"
         messages = [

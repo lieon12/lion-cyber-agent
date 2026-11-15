@@ -229,15 +229,15 @@ dihafal. Detail di `dataset/HARVEST.md`:
   menyebut verifydeal.site). Validasi: 0 duplikat, Jaccard prosa maks
   0,282, 18 tool-call valid, 0 "Prinsipnya", 0 CJK.
 
-  Panen 7 (batch v10 + tool verifikasi password, 24 baris,
+  Panen 7 (batch v10 + tool MENCOBA password, 24 baris,
   2026-11-16, total 354): 12 baris v10 yang diperbaiki — 6 entry_rank
   nama persis + 4 find_password_entry vs 2 search_web (cari TEMPAT
   password di URL = periksa situs itu; cari TUTORIAL = cari info
-  umum); 12 baris admin-password — kapan memanggil
-  verify_admin_password (password HANYA dari .env
-  VERIFYDEAL_ADMIN_PASSWORD, 401 = salah dan berhenti, 422 =
-  diterima tanpa data berubah), kontras cari-vs-verifikasi, konsep
-  tanpa tool, jangan pakai ulang password di situs lain. Tool baru
-  tools/admin_password.py + wiring (planner, validator, alias otak,
-  summarize). Validasi independen bokone: 0 duplikat, Jaccard prosa
-  maks 0,289 / 0,290, 0 "Prinsipnya", 0 CJK, 0 nilai password.
+  umum); 12 baris admin-password yang DITULIS ULANG — Kumar MENCOBA
+  daftar password umum yang lemah (try_admin_password, maks 20,
+  401 = ditolak coba berikutnya, 422 = diterima tanpa data berubah),
+  bukan diberi password (versi .env pertama sudah diganti pagi ini
+  juga atas koreksi Lion). Tool baru tools/admin_password.py +
+  wiring (planner, validator, alias otak, summarize). Validasi
+  independen bokone: 0 duplikat, Jaccard prosa maks 0,289 / 0,299,
+  0 "Prinsipnya", 0 CJK, 0 nilai password.

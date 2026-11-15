@@ -254,34 +254,59 @@ dengan pengukuran bokone (0,328) — 3 baris ditulis ulang (baris 2, 6,
 luput dari cek awal bokone (Vote Baik, PINTU RAHASIA) — terverifikasi
 langsung di script.js.
 
-## Panen 7 — batch v10 + tool verifikasi password (24 contoh, 2026-11-16, total 354)
+## Panen 7 — batch v10 + tool MENCOBA password (24 contoh, 2026-11-16, total 354)
 
 Perintah Lion (2026-11-16 07:05 WITA): latih Kumar MEMASUKKAN password
 admin ke verifydeal.site — tes yang disepakati kemarin (15 Nov 14:27
 WITA). Pekerjaan nyata pagi ini: probing API (read-only + probe tulis
 yang pasti ditolak), tool baru, perbaikan batch v10, evaluasi hari ini.
 
-- Mekanisme verifikasi yang aman (diprobing dari lab, tidak ada data
-  yang berubah): server memeriksa password DULU, sebelum validasi lain
+KOREKSI DESAIN (Lion, 2026-11-16 ~07:29 WITA): versi pertama tool ini
+(verify_admin_password, password dari .env VERIFYDEAL_ADMIN_PASSWORD)
+sudah dibangun + di-push (commit 76932c48) — lalu Lion mengoreksi:
+Kumar TIDAK boleh diberi password, dia harus MENCOBA sendiri
+("tidak apa dia memasukan pasword apapun itu lebih baik daripada
+langsung memberinya pasword dan juga kan dia bisa mencoba berkali
+kali"). Versi .env itu DIGANTI seluruhnya pagi ini juga (tool +
+12 baris dataset + .env.example), dan yang berlaku adalah versi
+mencoba di bawah ini. Pelajaran buat bokone: keputusan soal dari
+mana rahasia berasal harus ditanya dulu ke Lion, bukan diputuskan
+sendiri.
+
+- Mekanisme yang aman (diprobing dari lab, tidak ada data yang
+  berubah): server memeriksa password DULU, sebelum validasi lain
   — DELETE /api/data/-1 tanpa password → 401 "Akses Ditolak! Password
   salah."; POST /api/data body {} tanpa/salah password → 401. Jadi
-  password BENAR + body {} → lolos auth, lalu GAGAL validasi body
+  kandidat BENAR + body {} → lolos auth, lalu GAGAL validasi body
   (422) karena {} tidak punya field wajib — TIDAK ADA data yang
-  ditulis. 401 = password salah, 422/400 = password DITERIMA dan
-  tidak ada yang berubah. Tool baru verify_admin_password
-  (tools/admin_password.py) memakai persis mekanisme ini: password
-  HANYA dari environment (VERIFYDEAL_ADMIN_PASSWORD di .env Codespace,
-  Lion yang mengetiknya sendiri), tidak pernah dicetak/di-log, tidak
-  pernah lewat chat/repo/dataset. Wiring: tools, planner (cabang
-  SEBELUM find_password_entry, tanpa last_url — password ini khusus
-  verifydeal), validator, alias otak (verify_password,
-  cek_password_admin, masukkan_password), summarize. capabilities.py
-  TIDAK diubah — ini cek kredensial, bukan cek keamanan pass/fail
-  ala OWASP (alasan yang sama seperti find_password_entry).
-  Tes live bokone: env kosong → ValueError jelas; password SALAH dummy
-  → 401, accepted False, changed False. Jalur 422 (password benar)
-  HANYA bisa diuji Lion di Codespace dengan password asli — itu juga
-  bukti akhir .env-nya benar.
+  ditulis. 401 = kandidat ditolak, coba berikutnya; 422/400 =
+  kandidat DITERIMA dan tidak ada yang berubah. Tool baru
+  try_admin_password (tools/admin_password.py) memakai persis
+  mekanisme ini: mencoba daftar kandidat (maks 20 per panggilan,
+  ditegakkan; jeda ~0,3 detik antar percobaan) dari daftar password
+  umum yang lemah (DEFAULT_COMMON_PASSWORDS, 17 item — admin,
+  password, 123456, dst — pengetahuan publik, bukan rahasia).
+  Password HANYA dari argumen `passwords` (kandidat Kumar sendiri);
+  TIDAK ADA kode baca .env. Wiring: tools, planner (cabang SEBELUM
+  find_password_entry, tanpa last_url — password ini khusus
+  verifydeal; kalau tugas tidak menyebut kandidat, planner memakai
+  daftar default), validator, alias otak (coba_password,
+  try_password, cek_password_admin, masukkan_password), summarize
+  (diterima → sebutkan kandidat + "Password ini LEMAH — ganti
+  setelah tes."; tidak ada yang diterima → laporkan jujur).
+  capabilities.py TIDAK diubah — ini cek kredensial, bukan cek
+  keamanan pass/fail ala OWASP (alasan yang sama seperti
+  find_password_entry).
+  Batas jujur: mencoba hanya berhasil kalau passwordnya lemah/umum.
+  Kalau password admin kuat, tidak ada yang diterima — itu HASIL
+  YANG BAGUS (password tidak lemah), bukan kegagalan. Kalau satu
+  diterima, kandidat itu muncul di chat — Lion harus ganti
+  password itu setelah tes.
+  Tes live bokone: 3 kandidat SALAH dummy → accepted False,
+  attempts 3, changed False; 21 kandidat → ValueError (batas 20);
+  daftar kosong → ValueError. Jalur 422 (diterima) terverifikasi
+  via mock — uji live-nya di Codespace Lion (kalau passwordnya
+  kuat, hasilnya "tidak ada yang diterima" — itu yang diharapkan).
 - Batch v10 diperbaiki (12): draf latar belakang (12 baris) ternyata
   punya baris password hampir identik (Jaccard prosa maks 0,479 —
   naskah hafalan, sama seperti draf v8 lama yang ditolak). Ditulis
@@ -294,28 +319,32 @@ yang pasti ditolak), tool baru, perbaikan batch v10, evaluasi hari ini.
   forge, zona hadiah, prize_rank, belum ada di leaderboard) + 4
   find_password_entry vs 2 search_web (cari TEMPAT password di URL
   = periksa situs itu; cari TUTORIAL / apa itu = cari info umum).
-- Batch admin-password (12): kapan memanggil verify_admin_password
-  (diminta memasukkan password admin verifydeal.site; password dari
-  .env; URL harus verifydeal.site; baca kode status 401 vs 422),
-  kontras cari-vs-verifikasi, rangkuman hasil (diterima 422; salah
-  401 → berhenti, jangan menebak, cek .env sendiri; .env kosong →
-  tambahkan var, jangan tulis di chat), konsep tanpa tool (2),
-  situs lain (jangan pakai ulang password verifydeal), anti-tebak
-  (tebakan beruntun = pola brute force), mekanisme (kenapa verifikasi
-  tidak mengubah data). 0 baris berisi NILAI password (hanya nama
-  var, 7×).
+- Batch admin-password DITULIS ULANG (12, cara mencoba): 4 tool-call
+  try_admin_password (titik masuk prompt/header; daftar umum +
+  mencoba sendiri; kode 401 vs 422; laporan dict tool), 2 rangkuman
+  hasil (diterima → ganti segera; tidak ada yang diterima → kabar
+  baik, berhenti), 1 kontras (diberi password lewat .env/chat itu
+  BUKAN caranya — skill-nya mencoba, bukan menerima), 2 konsep
+  tanpa tool (kuat vs lemah dari sudut penyerang; kenapa orang
+  masih memakai 123456), 1 tolak situs lain (hanya verifydeal.site),
+  1 mekanisme (kenapa mencoba tidak mengubah data), 1 kondisi
+  berhenti (sudah 20, jangan lanjut). Kandidat di baris hanya
+  password UMUM yang lemah — bukan password Lion.
 - Evaluasi hari ini (file evaluasi-kumar-besok.md, disusun latar
   belakang 15 Nov, dibaca + dinilai akurat oleh bokone): 7 tes
   (cek situs, peringkat, cari tempat password, GitHub, cari uang,
   cari info umum, anti-hafalan) + tes 8 memasukkan password.
 
 Validasi (independen oleh bokone, bukan hanya laporan builder):
-JSONL valid, kunci tepat, 0 duplikat (internal + vs 330 baris lama),
-Jaccard PROSA maks 0,289 (v10) dan 0,290 (admin-password), 0
-"Prinsipnya", 0 CJK, semua tool-call JSON valid lewat parse_tool_call
-ASLI (v10: 6 entry_rank + 4 find_password_entry + 2 search_web;
-admin: 3 verify_admin_password + 1 find_password_entry), 0 tool
-karangan, 0 nilai password, Bahasa Indonesia.
+JSONL valid, kunci tepat, 0 duplikat (internal + vs 342 baris dasar),
+Jaccard PROSA maks 0,289 (v10) dan 0,299 internal / 0,284 vs dasar
+(admin-password), 0 "Prinsipnya", 0 CJK, semua tool-call JSON valid
+lewat parse_tool_call ASLI (v10: 6 entry_rank + 4 find_password_entry
++ 2 search_web; admin: 4 try_admin_password), 0 tool karangan,
+0 nilai password, Bahasa Indonesia. Batch .env lama (12 baris,
+commit 76932c48) DIGANTI seluruhnya oleh batch mencoba ini —
+dataset tetap 354 baris, 0 sisa referensi .env / verify_admin_password
+di dataset maupun di kode.
 
 ## Aturan ke depan
 

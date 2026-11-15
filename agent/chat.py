@@ -114,12 +114,18 @@ def summarize(trace):
             for b in r.get("password_buttons") or []:
                 lines.append(f"  * Tombol/link: \"{b.get('text')}\" ({b.get('tag')})")
             continue
-        if step["tool"] == "verify_admin_password" and isinstance(r, dict):
-            status = "diterima" if r.get("accepted") else "tidak diterima"
-            lines.append(
-                f"- verify_admin_password: password admin {status} "
-                f"(status {r.get('status')})"
-            )
+        if step["tool"] == "try_admin_password" and isinstance(r, dict):
+            if r.get("accepted"):
+                lines.append(
+                    f"- try_admin_password: password admin diterima: '{r.get('password')}' "
+                    f"(setelah {r.get('attempts')} percobaan)"
+                )
+                lines.append("  * Password ini LEMAH — ganti setelah tes.")
+            else:
+                lines.append(
+                    f"- try_admin_password: tidak ada yang diterima setelah "
+                    f"{r.get('attempts')} percobaan"
+                )
             lines.append(f"  * {r.get('message')}")
             if r.get("changed") is False:
                 lines.append("  * Tidak ada data yang berubah.")

@@ -184,13 +184,24 @@ def find_password_entry(url):
     return _tool_module("password_entry", "password_entry.py").find_password_entry(url)
 
 
-def verify_admin_password(url="https://www.verifydeal.site/"):
-    """Verifikasi password admin verifydeal.site (password dari .env).
+def try_admin_password(passwords=None, url="https://www.verifydeal.site/"):
+    """Coba daftar kandidat password admin verifydeal.site (audit password lemah).
 
-    POST /api/data dengan body {} + header x-admin-password. 401 =
-    password salah; 422/400 = password diterima dan TIDAK ADA data
-    yang berubah (body {} tidak valid, tidak bisa tersimpan). Password
-    dibaca dari VERIFYDEAL_ADMIN_PASSWORD di environment — tool ini
-    tidak pernah mencetak atau me-log nilainya.
+    Koreksi Lion 2026-11-16: Kumar MENCOBA kandidat password sendiri,
+    bukan diberi password lewat .env/chat. POST /api/data dengan body {}
+    + header x-admin-password per kandidat. 401 = ditolak, coba
+    berikutnya; 422/400 = diterima dan TIDAK ADA data yang berubah
+    (body {} tidak valid, tidak bisa tersimpan). Maks 20 kandidat.
+    Kalau tidak ada yang diterima, itu hasil yang bagus — password
+    bukan password umum yang lemah.
     """
-    return _tool_module("admin_password", "admin_password.py").verify_admin_password(url)
+    return _tool_module("admin_password", "admin_password.py").try_admin_password(
+        passwords, url
+    )
+
+
+# Daftar password umum yang lemah (pengetahuan publik) — dipakai
+# planner saat Kumar diminta mencoba password tanpa kandidat spesifik.
+DEFAULT_COMMON_PASSWORDS = _tool_module(
+    "admin_password", "admin_password.py"
+).DEFAULT_COMMON_PASSWORDS
