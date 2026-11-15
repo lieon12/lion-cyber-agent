@@ -316,7 +316,7 @@ class LocalBrain:
             f"Hasil tool: {str(tool_result)[:2000]}"
         )
         try:
-            return self._generate(
+            text = self._generate(
                 [
                     {"role": "system", "content": TRAINING_SYSTEM_PROMPT},
                     {"role": "user", "content": user},
@@ -324,6 +324,25 @@ class LocalBrain:
             ).strip()
         except Exception:  # noqa: BLE001 - gagal merangkum = pakai ringkasan lokal
             return ""
+        # Jaga-jaga: ringkasan model kecil sering "ngelantur" — kalau
+        # hasilnya bukan prosa Indonesia yang bersih, kembalikan ""
+        # supaya chat.py memakai ringkasan lokal dari jejak tool (yang
+        # selalu benar). Tiga pola ngelantur yang terbukti di uji v7:
+        # (1) menggemakan JSON tool-call, bukan merangkum;
+        # (2) serpihan bahasa lain (CJK) saat model ragu;
+        # (3) kalimat yang sama diulang-ulang ("Prinsipnya: ..." —
+        # pola penutup di 16 baris dataset lama yang jadi umpan loop).
+        if not text:
+            return ""
+        if parse_tool_call(text) is not None:
+            return ""
+        if any("\u4e00" <= ch <= "\u9fff" for ch in text):
+            return ""
+        sentences = [s.strip().lower() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
+        for s in set(sentences):
+            if len(s) > 20 and sentences.count(s) >= 3:
+                return ""
+        return text
 
 
 def load_local_brain(adapter_dir=DEFAULT_ADAPTER_DIR, base=BASE_MODEL):
