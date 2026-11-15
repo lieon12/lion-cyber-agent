@@ -170,3 +170,15 @@ def vet_tool(repo_full_name):
 def run_self_eval():
     """Evaluasi diri: uji tool sendiri ke target yang diizinkan, lalu nilai."""
     return _tool_module("self_eval", "self_eval.py").run_self_eval()
+
+
+def find_password_entry(url):
+    """Cari SEMUA tempat password dimasukkan di satu situs (read-only).
+
+    Bukan cuma <input type="password"> — juga tombol soal password,
+    dialog prompt() JS yang meminta password, dan header password ke
+    API. Pelajaran dari verifydeal.site (2026-11-15): situs itu tidak
+    punya input password sama sekali, semua titik masuknya lewat
+    prompt() + header x-admin-password.
+    """
+    return _tool_module("password_entry", "password_entry.py").find_password_entry(url)

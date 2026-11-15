@@ -12,6 +12,7 @@ from .tools import (
     competition_status,
     entry_rank,
     fetch_url,
+    find_password_entry,
     list_open_competitions,
     my_entry_status,
     read_repo_file,
@@ -27,6 +28,7 @@ TOOLS = {
     "search_web": search_web,
     "check_site_basic": check_site_basic,
     "scan_sql": scan_sql,
+    "find_password_entry": find_password_entry,
     # Skill Kumar (v4) — lihat tools/makefun.py, tools/github_tools.py,
     # tools/self_eval.py. NOTE: scan_xss DIHAPUS 2026-11-14 — tool XSS
     # belum disetujui Lion (draft lokal di tools/xss_scan.py saja).
@@ -137,6 +139,39 @@ def is_rank_query(task):
     """True kalau user minta peringkat/posisi entry di leaderboard."""
     t = task.lower()
     return any(k in t for k in ("peringkat", "rank", "posisi", "ranking"))
+
+
+def is_password_entry(task):
+    """True kalau user minta CARI tempat memasukkan password di sebuah
+    situs — BUKAN pertanyaan konsep tentang password.
+
+    Pelajaran dari verifydeal.site (2026-11-15): titik masuk password
+    bisa berupa dialog prompt() JS, bukan cuma <input type="password">,
+    jadi pencarian harus pakai find_password_entry, bukan check_site_basic.
+    Pertanyaan konsep ("apa itu password yang kuat?", "apakah aman
+    menyimpan password teks biasa?") TIDAK memicu tool ini — itu
+    dijawab langsung dengan prosa, tanpa tool.
+    """
+    t = task.lower()
+    if "cari tahu" in t or "cari tau" in t:
+        return False
+    if re.search(
+        r"\b(apa itu|apakah|bagaimana cara membuat|kenapa|mengapa)\b.*\bpassword\b", t
+    ):
+        return False
+    action = (
+        "cari",
+        "cek",
+        "periksa",
+        "temukan",
+        "tunjukkan",
+        "di mana",
+        "dimana",
+        "letak",
+        "tempat",
+    )
+    target = ("password", "kata sandi", "login", "form login")
+    return any(a in t for a in action) and any(k in t for k in target)
 
 
 def extract_slug(task):
@@ -252,6 +287,16 @@ def plan(task, last_url=None):
                 steps.append(("read_repo_file", {"owner": repo.split("/")[0], "repo": repo.split("/")[1], "path": path}))
                 return steps
         steps.append(("search_github_tools", {"query": task}))
+        return steps
+
+    # Cari tempat memasukkan password — sebelum cabang umum "http",
+    # kalau tidak "cari tempat memasukkan password di https://..."
+    # malah jadi check_site_basic dan tidak pernah menemukan prompt().
+    if is_password_entry(task):
+        if url:
+            steps.append(("find_password_entry", {"url": url}))
+        # Tanpa URL, kembalikan langkah kosong: chat.py akan menanyakan
+        # URL-nya ke user, bukan malah mencari tutorial di web.
         return steps
 
     if "http" in t:

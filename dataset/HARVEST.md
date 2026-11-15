@@ -222,6 +222,38 @@ valid lewat parse_tool_call ASLI, 7 snippet Python compile + jalan,
 baris lama sebelum digabung. Draf v8 lama (v8-targeted.jsonl, 12:29
 WITA) tidak dipakai: parafrase v7 + template pembuka identik.
 
+## Panen 6 — batch password-entry (24 contoh, 2026-11-15, total 330)
+
+Perintah Lion (2026-11-15 13:43 WITA): ajari Kumar CARA menemukan tempat
+memasukkan password di verifydeal.site — tanpa diberi tahu di mana.
+Temuan bokone (cek read-only): situs itu TIDAK PUNYA <input
+type="password">. Titik masuknya adalah dialog prompt() di script.js:
+hapus data, upload QRIS, tambah/edit data, vote/like, plus "PINTU
+RAHASIA" (menu Tambah Data); password mentah dikirim sebagai header
+x-admin-password. Tool baru find_password_entry (tools/password_entry.py)
+dibangun untuk ini + wiring (tools, planner, validator, alias otak,
+summarize). Batch ini mengajari prosedurnya di situs BARU, bukan hafalan
+soal verifydeal (0 baris menyebut verifydeal.site):
+- Form login (5): kolom password + action/method + autocomplete.
+- Prompt()-only (5): dialog penjaga aksi + method/endpoint/header.
+- Tanpa titik masuk (3): jawab jujur "tidak ditemukan" dari hasil tool.
+- Sub-halaman /login via tautan (3): ikuti tautan, baca form di sana.
+- Konsep tanpa tool (4): pertanyaan password -> prosa langsung.
+- HTTP (2): form password lewat HTTP -> tandai transportnya.
+- Tambahan: ganti password di halaman pengaturan; hapus akun (prompt);
+  login di subdomain auth terpisah.
+Aturan batch ini: 0 baris diakhiri "Prinsipnya:"; tidak ada template
+pembuka yang diulang; validasi: 0 duplikat persis, Jaccard PROSA maks
+0,282 (Jaccard baris-penuh 0,345 — naik karena 18 baris berbagi JSON
+tool-call yang sama persis, yaitu format output yang benar, bukan
+hafalan; penalaran prosanya yang dinilai), 18 JSON tool-call valid lewat
+parse_tool_call, 0 tool karangan, 0 "Prinsipnya", 0 CJK.
+Perbaikan bokone atas laporan builder: klaim Jaccard 0,292 tidak cocok
+dengan pengukuran bokone (0,328) — 3 baris ditulis ulang (baris 2, 6,
+11) sampai prosa maks 0,282. Builder juga menemukan 2 prompt yang
+luput dari cek awal bokone (Vote Baik, PINTU RAHASIA) — terverifikasi
+langsung di script.js.
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang

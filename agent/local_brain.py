@@ -35,6 +35,7 @@ from .agent import (
     extract_url,
     is_github_tool,
     is_makefun,
+    is_password_entry,
     is_rank_query,
     is_sql_scan,
 )
@@ -57,6 +58,7 @@ REQUIRED_ARGS = {
     "check_site_basic": ("url",),
     "fetch_url": ("url",),
     "scan_sql": ("url",),
+    "find_password_entry": ("url",),
     "competition_status": ("slug",),
     "my_entry_status": ("submission_id",),
     "vet_tool": ("repo_full_name",),
@@ -81,6 +83,10 @@ _TOOL_ALIASES = {
     "get_rank": "entry_rank",
     "check_rank": "entry_rank",
     "get_user_rank": "entry_rank",  # uji v8: adapter mengarang nama ini untuk peringkat
+    "find_password": "find_password_entry",
+    "cari_password": "find_password_entry",
+    "cek_password": "find_password_entry",
+    "find_login_form": "find_password_entry",
 }
 
 
@@ -266,7 +272,11 @@ class LocalBrain:
             if name not in TOOLS:
                 return ("fallback", f"tool '{name}' tidak dikenal")
             # "Lanjut ..." tanpa URL: pakai URL terakhir.
-            if name in ("scan_sql", "check_site_basic", "fetch_url") and not args.get("url") and last_url:
+            if (
+                name in ("scan_sql", "check_site_basic", "fetch_url", "find_password_entry")
+                and not args.get("url")
+                and last_url
+            ):
                 args = dict(args, url=last_url)
             # entry_rank boleh tanpa slug kalau ada submission id / handle.
             if name == "entry_rank" and not (args.get("slug") or args.get("submission_id") or args.get("handle")):
@@ -303,6 +313,8 @@ class LocalBrain:
         ):
             needs_tool = True
         if is_github_tool(task):
+            needs_tool = True
+        if is_password_entry(task):
             needs_tool = True
         if any(k in t for k in ("cek ", "scan ", "periksa ", "baca ")):
             needs_tool = True

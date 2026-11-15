@@ -223,3 +223,8 @@ dihafal. Detail di `dataset/HARVEST.md`:
   Catatan: draf v8 lama (dataset-batch-2026-11-15-v8-targeted.jsonl)
   TIDAK dipakai — parafrase v7 + template pembuka identik, justru
   naskah hafalan.
+  Panen 6 (password-entry, 24 baris, total 330): prosedur menemukan
+  tempat password dimasukkan — input password, tombol password,
+  prompt() JS, header password, tautan login — di situs baru (0 baris
+  menyebut verifydeal.site). Validasi: 0 duplikat, Jaccard prosa maks
+  0,282, 18 tool-call valid, 0 "Prinsipnya", 0 CJK.

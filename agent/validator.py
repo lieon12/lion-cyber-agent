@@ -27,6 +27,10 @@ ALLOWED_TOOLS = {
     "read_repo_file",
     "vet_tool",
     "run_self_eval",
+    # Cari tempat memasukkan password (read-only, GET saja) — pelajaran
+    # verifydeal.site 2026-11-15: titik masuk password bisa lewat
+    # prompt() JS, bukan cuma <input type="password">.
+    "find_password_entry",
 }
 # NOTE 2026-11-14: "xss_scan" dan "scan_xss" DIHAPUS dari daftar ini —
 # tool XSS belum disetujui Lion (draft lokal di tools/xss_scan.py saja),

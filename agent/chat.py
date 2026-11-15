@@ -89,6 +89,31 @@ def summarize(trace):
             if r.get("prize_rank") is not None:
                 lines.append(f"  * Peringkat hadiah: {r.get('prize_rank')}")
             continue
+        if step["tool"] == "find_password_entry" and isinstance(r, dict):
+            lines.append(f"- find_password_entry: {r.get('summary')}")
+            for inp in r.get("password_inputs") or []:
+                if inp.get("source", "").startswith("script"):
+                    lines.append(
+                        f"  * Kolom password dibuat lewat JavaScript ({inp.get('script', 'script inline')}): {inp.get('note', '')}"
+                    )
+                else:
+                    lines.append(
+                        f"  * Kolom <input type=\"password\"> field '{inp.get('field_name')}' "
+                        f"di form {inp.get('form_action') or '(halaman yang sama)'} "
+                        f"({inp.get('form_method') or 'GET'})"
+                    )
+            for p in r.get("password_prompts") or []:
+                detail = f"prompt \"{p.get('prompt_text')}\""
+                if p.get("method"):
+                    detail += f" — menjaga {p['method']}"
+                    if p.get("endpoint"):
+                        detail += f" {p['endpoint']}"
+                if p.get("headers"):
+                    detail += f" (header: {', '.join(p['headers'])})"
+                lines.append(f"  * Dialog JS: {detail}")
+            for b in r.get("password_buttons") or []:
+                lines.append(f"  * Tombol/link: \"{b.get('text')}\" ({b.get('tag')})")
+            continue
         if isinstance(r, dict) and "findings" in r:
             lines.append(f"- {step['tool']}: status {r.get('status')}")
             for f in r["findings"]:
