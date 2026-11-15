@@ -89,11 +89,19 @@ def is_github_tool(task):
 
     Kata "github" tidak wajib — pola "owner/repo" + kata kerja
     (vetting, baca, cari tool) juga cukup.
+
+    Perbaikan 2026-11-15 (bug dari tes v6): "check_site/check_url"
+    dalam teks instruksi sempat dibaca sebagai repo owner/repo dan
+    kata "tool" memicu cabang GitHub, sehingga perintah cek website
+    malah mencari tool di GitHub dan jawabannya "Tidak ada hasil".
+    Kalau ada URL bukan github.com di tugas, ini bukan tugas GitHub.
     """
     t = task.lower()
     keywords = ("cari", "tool", "vet", "nilai", "periksa", "baca", "repo")
     if "github" in t and any(k in t for k in keywords):
         return True
+    if "github.com" not in t and extract_url(task):
+        return False
     return bool(extract_repo(task)) and any(k in t for k in keywords)
 
 
