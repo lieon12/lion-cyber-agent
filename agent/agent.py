@@ -124,6 +124,15 @@ def extract_handle(task):
     return m.group(1) if m else None
 
 
+# Handle make.fun Lion. "Peringkat saya" selalu berarti entry milik
+# Lion sendiri (@qjack). entry_rank butuh submission id ATAU handle,
+# jadi kalau pertanyaan peringkat tidak menyebut keduanya, pakai
+# handle ini sebagai default — kalau tidak, entry_rank selalu gagal
+# dengan "berikan submission id atau handle" (bukti: uji v7 soal 2).
+# Tool-nya read-only, tidak ada yang dikirim atau diubah.
+DEFAULT_HANDLE = "qjack"
+
+
 def is_rank_query(task):
     """True kalau user minta peringkat/posisi entry di leaderboard."""
     t = task.lower()
@@ -197,7 +206,7 @@ def plan(task, last_url=None):
                 {
                     "slug": extract_slug(task) or "",
                     "submission_id": extract_submission_id(task),
-                    "handle": extract_handle(task),
+                    "handle": extract_handle(task) or DEFAULT_HANDLE,
                 },
             )
         )
@@ -215,7 +224,7 @@ def plan(task, last_url=None):
                     {
                         "slug": extract_slug(task) or "",
                         "submission_id": extract_submission_id(task),
-                        "handle": extract_handle(task),
+                        "handle": extract_handle(task) or DEFAULT_HANDLE,
                     },
                 )
             )

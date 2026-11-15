@@ -27,6 +27,7 @@ import re
 from pathlib import Path
 
 from .agent import (
+    DEFAULT_HANDLE,
     TOOLS,
     extract_handle,
     extract_slug,
@@ -269,6 +270,10 @@ class LocalBrain:
             # entry_rank boleh tanpa slug kalau ada submission id / handle.
             if name == "entry_rank" and not (args.get("slug") or args.get("submission_id") or args.get("handle")):
                 return ("fallback", "entry_rank butuh slug, submission id, atau handle")
+            # "Peringkat saya" tanpa handle/id: pakai handle Lion, kalau
+            # tidak entry_rank gagal di tool-nya (bukti: uji v7 soal 2).
+            if name == "entry_rank" and not args.get("submission_id") and not args.get("handle"):
+                args = dict(args, handle=DEFAULT_HANDLE)
             missing = [k for k in REQUIRED_ARGS.get(name, ()) if not args.get(k)]
             if missing:
                 return ("fallback", f"tool '{name}' kekurangan argumen: {', '.join(missing)}")
