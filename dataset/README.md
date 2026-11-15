@@ -115,3 +115,15 @@ ilmu untuk Kumar. Detail sistem dan isinya ada di
 - Prinsip (1): arti "berfikir, bukan menghafal" dalam praktik.
 - Keputusan tool dengan penalaran + JSON (2): cek ulang Juice Shop,
   lanjut scan SQL Juice Shop.
+
+Panen 2 — ilmu dari build + submit aggregator (25 contoh,
+2026-11-15, total 210). Detail di `dataset/HARVEST.md`:
+- Routing kualitas (3), budget runtime (2), failover / bug nyata
+  trial-2 (3, termasuk suspect-first −60 dan drop setelah 2
+  penolakan beruntun), wire translation (3), katalog (2),
+  determinisme / replay (2), gerbang transkrip (2), alur submit
+  (3, termasuk 2 tool-call: my_entry_status, entry_rank),
+  penalaran kompetisi (2: 99 seri kalah tie-break panggilan,
+  tradeoff drop-first vs suspect-first), ringkasan prosa (3).
+  Validasi: 0 duplikat, 2 JSON tool-call valid lewat
+  parse_tool_call, 5 snippet Python compile, 3 baris prosa murni.
