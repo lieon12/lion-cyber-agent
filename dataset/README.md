@@ -127,3 +127,43 @@ Panen 2 — ilmu dari build + submit aggregator (25 contoh,
   tradeoff drop-first vs suspect-first), ringkasan prosa (3).
   Validasi: 0 duplikat, 2 JSON tool-call valid lewat
   parse_tool_call, 5 snippet Python compile, 3 baris prosa murni.
+
+Panen 3 — ilmu dari submit aggregator-01, latih v5 + bug EOS, riset +
+build + submit + tuning forge (36 contoh, 2026-11-15, total 246).
+Detail di `dataset/HARVEST.md`:
+- Submit aggregator-01 (3): bundle butuh git repo (clone lalu bundle),
+  Force_Last (submit ulang hanya bila benar-benar lebih baik), kode
+  klaim hanya di metadata privat + chat pemilik (bukan di dataset/repo).
+- Latih v5 + tes (3): cek 'Jumlah contoh: 210' sebelum latih,
+  alias check_site → check_site_basic (jaring pengaman, bukan
+  pengganti nama persis), ringkasan prosa tes v5 (1).
+- Bug EOS (3): banjir <|fim_pad|> karena generate() tanpa
+  eos_token_id; perbaiki di KODE bukan data (tanpa retraining);
+  diagnosis yang sama diterapkan ke chatbot lain yang meracau.
+- Riset github-clone (4): baca scorer dulu (bar hadiah = kalahkan
+  referensi ~900 + interval-t 90%); 1.909 entry 120/120 → lomba
+  kecepatan; model_calls "optional" = tanpa kunci berbayar;
+  syarat repo-created-after-open relatif per kompetisi.
+- Build forge (7): SHA-1 blob git (Python), delta OFS/REF_DELTA,
+  upload-pack v2 vs receive-pack v0, fast-forward per ref,
+  determinisme/replay byte-identik, bug viewer-login poisoning,
+  satu store bersama REST/GraphQL/MCP (merge.ts).
+- Submit forge + gate (4): SPDX di LICENSE, main.ts 0 authored
+  lines karena verbatim → tulis FRESH (47 lines), gate dipenuhi
+  saat kerja bukan ditempel akhir, tool-call my_entry_status (1).
+- Live-vs-lokal (4): lokal 951 → live 911 (rasio TIDAK bertahan),
+  rumus poin perf (Python), tool-call entry_rank (1), ringkasan
+  prosa hasil live (1).
+- Tuning ronde 1 (4): panjang stream zlib via unused_data
+  (Python), cache tanpa efek bila bukan bottleneck, bug invalidasi
+  cache GraphQL closeIssue (595 → 120/120), penilaian jujur
+  (gain +10 lokal tidak cukup resubmit).
+- Keputusan OpenRouter (2): kredit $10 itu kenyamanan bukan syarat
+  (key yang wajib, sudah ada); free tier 50/hari diatur dengan
+  hemat (grade 1 instance, submit sekali).
+- Keputusan resubmit disiplin (2): rencana berbatas + kondisi
+  berhenti; kuota langka hanya untuk perubahan yang mengubah hasil.
+  Validasi: 0 duplikat (exact + shingle 8 kata), 2 JSON tool-call
+  valid lewat parse_tool_call, 3 snippet Python compile + jalan
+  (SHA-1 blob, poin perf 48, panjang stream zlib 19), 2 baris
+  prosa murni, tanpa claim code/secret.

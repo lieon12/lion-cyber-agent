@@ -78,6 +78,74 @@ Validasi: JSONL valid, kunci tepat, 0 duplikat (exact + shingle
 (my_entry_status, entry_rank), 5 snippet Python compile, 3 baris
 ringkasan murni prosa, tanpa fakta live karangan.
 
+## Panen 3 — 2026-11-15 (36 contoh, 210 → 246)
+
+Sumber: pekerjaan nyata hari ini setelah harvest 2 — submit +
+verifikasi aggregator-01, latih v5 di Colab + tes di Codespace,
+bug EOS / banjir <|fim_pad|> (commit bcde423f), riset github-core-
+clone-01, build forge (3.634 baris, grade-local 951), submit forge
+(skor live 911, rank 1615), perf-tuning ronde 1 (951 → 961 lokal,
+keputusan disiplin TIDAK resubmit), keputusan OpenRouter (tolak beli
+kredit $10 — kenyamanan, bukan syarat).
+
+- Submit aggregator-01 (3): bundle butuh git repo (clone lalu
+  bundle dari clone); Force_Last (submit ulang hanya bila
+  benar-benar lebih baik); kode klaim hanya di metadata privat +
+  chat pemilik — tidak pernah di dataset/repo.
+- Latih v5 + tes (3): cek 'Jumlah contoh: 210' sebelum latih;
+  alias check_site → check_site_basic menangkap nama yang salah
+  tapi jawaban tetap benar (jaring pengaman, bukan pengganti);
+  ringkasan prosa tes v5 (1).
+- Bug EOS (3): banjir <|fim_pad|> karena generate() tanpa
+  eos_token_id padahal latih diakhiri <|im_end|>; perbaiki di KODE
+  (eos_token_id=[eos, <|im_end|>]), tanpa retraining; diagnosis
+  yang sama diterapkan ke chatbot lain yang meracau setelah
+  menjawab.
+- Riset github-clone (4): baca scorer dulu — bar hadiah =
+  kalahkan forge referensi ~900 + interval-t 90%; 1.909 entry
+  120/120 → perebutan hadiah murni kecepatan; model_calls
+  "optional" = tanpa kunci berbayar; syarat repo-created-after-
+  open relatif per kompetisi (repo 07:49 WITA lolos github-clone
+  tapi gagal aggregator-02).
+- Build forge (7): SHA-1 blob git (Python); delta OFS/REF_DELTA
+  (resep, bukan data); upload-pack v2 vs receive-pack v0;
+  fast-forward per ref (push campuran: ok + ng); determinisme /
+  replay byte-identik (tanpa jam, tanpa random tanpa seed); bug
+  viewer-login poisoning (probe 404 meracuni viewer); satu store
+  bersama REST/GraphQL/MCP (logika merge di merge.ts).
+- Submit forge + gate (4): SPDX di LICENSE (license_osi);
+  main.ts 0 authored lines karena ditulis verbatim → tulis FRESH
+  tanpa dibaca dulu (47 authored lines, 14 passed 0 failed);
+  gate dipenuhi saat kerja, bukan ditempel akhir; tool-call
+  my_entry_status untuk submission forge (1).
+- Live-vs-lokal (4): lokal 951–958 jadi live 911 — rasio TIDAK
+  bertahan (p50 368 ms → 689 ms, faktor 1,87×); rumus poin perf
+  clamp(25 − 12,5·log2(t/T_ref)) (Python); tool-call entry_rank
+  untuk forge (1); ringkasan prosa hasil live (1).
+- Tuning ronde 1 (4): panjang stream zlib via unused_data
+  (Python, prinsip fast path inflateAt 1,62 → 0,505 ms/pack);
+  cache tanpa efek bila yang di-cache bukan bottleneck (clone);
+  bug invalidasi cache GraphQL closeIssue (feature 595 →
+  120/120); penilaian jujur — gain +10 lokal tidak cukup
+  resubmit (target p50 ≤250 ms / perf ≥165; hasil 349 ms / 161).
+- Keputusan OpenRouter (2): kredit $10 itu kenyamanan
+  (1.000/hari), bukan syarat — key yang wajib, sudah ada dan
+  terverifikasi; free tier 50/hari diatur dengan hemat (grade 1
+  instance ~6–10 panggilan, submit sekali).
+- Keputusan resubmit disiplin (2): rencana berbatas + kondisi
+  berhenti yang ditulis sebelum mulai; kuota langka (1 tersisa
+  hari itu) hanya untuk perubahan yang mengubah hasil.
+
+Validasi: JSONL valid, kunci tepat, 0 duplikat (exact + shingle
+8 kata vs 210 baris lama + internal), 2 JSON tool-call valid
+lewat parse_tool_call (my_entry_status + entry_rank untuk forge),
+3 snippet Python compile + jalan (SHA-1 blob, poin perf 48,
+panjang stream zlib 19), 2 baris ringkasan murni prosa, tanpa
+claim code / secret. Dua baris tool-call pertama sempat gagal
+validasi shingle (terlalu mirip baris aggregator harvest 2) dan
+ditulis ulang dengan sudut penalaran berbeda (baca daftar check
+per nama; baca skor per kolom).
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang
