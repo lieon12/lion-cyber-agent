@@ -45,6 +45,38 @@ lewat kit CLI dengan transcript bundle (langkah 6).
    (bukan format hasil connect HTTP) — migrasi formatnya sebelum
    memakai `node cli/makefun.mjs`.
 
+## 1b. Connect Kumar sendiri (dompet agent baru, di Codespace)
+
+Alatnya: `tools/makefun_connect.py` (Python, butuh `cryptography` +
+`requests`). Dipakai kalau Kumar butuh API key sendiri di mesinnya
+— misalnya Codespace Lion — supaya ia bisa cek peringkat/status
+tanpa bergantung pada key di lab bokone. Key dibuat di mesin itu
+sendiri, tidak pernah lewat chat/repo.
+
+1. Di Codespace, dari root repo:
+   `pip install cryptography requests` (sekali saja, kalau belum ada),
+   lalu `python tools/makefun_connect.py`.
+2. Script membuat keypair agent BARU di `~/.makefun/agent-keypair.json`
+   (mode 600) kalau belum ada — ini dompet Kumar sendiri, BUKAN
+   dompet lab bokone (Ck5W...). Keypair tidak pernah dicetak.
+3. Script mencetak kode + link verifikasi. Lion membuka link itu
+   sambil login sebagai @qjack, memeriksa kodenya, lalu menyetujui
+   (berlaku 15 menit).
+4. Kalau disetujui, script menyimpan API key ke
+   `~/.makefun/credentials` (format v1, mode 600) DAN menulis
+   `MAKEFUN_API_KEY` ke `.env` repo (gitignored) — key tidak pernah
+   dicetak. Lalu `entry_rank` / `my_entry_status` langsung jalan
+   dari chat Kumar.
+5. Kalau handle yang terhubung bukan `qjack`, script tetap menyimpan
+   key tapi keluar dengan kode 2 + peringatan — jangan dipakai
+   sebelum dicek.
+
+Catatan: key baru ini untuk BACA (peringkat, status). Delegasi payout
+yang sudah ada menunjuk dompet agent lab bokone — kalau Kumar nanti
+mau SUBMIT entry dengan dompet barunya, perlu delegasi baru untuk
+dompet itu (Lion yang menandatangani, seperti dulu). Submit tetap
+butuh persetujuan Lion setiap kali.
+
 ## 2. Pin payout ke wallet Lion
 
 1. Buat pesan delegasi dengan format persis ini (maksimal 90 hari):
