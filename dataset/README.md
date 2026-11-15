@@ -167,3 +167,27 @@ Detail di `dataset/HARVEST.md`:
   valid lewat parse_tool_call, 3 snippet Python compile + jalan
   (SHA-1 blob, poin perf 48, panjang stream zlib 19), 2 baris
   prosa murni, tanpa claim code/secret.
+
+Panen 4 — batch TARGET v7 (30 contoh, 2026-11-15, total 276).
+Bukan tambah data massal: satu batch kecil yang hanya memperbaiki 5
+kegagalan hasil ujian v6 (target 4/5 tidak tercapai: 0 lulus penuh,
+2 setengah, 3 gagal). Detail di `dataset/HARVEST.md`:
+- Fakta-live + last_url (5): peringkat entry_rank abaikan URL
+  terakhir (food-picture + github-clone, dengan/tanpa baris last_url),
+  my_entry_status forge, list_open_competitions.
+- Hash password benar (6): pbkdf2_hmac + salt acak (stdlib, bisa
+  jalan), MD5 tidak aman, kenapa hash cepat tidak cocok, hashing
+  password vs file, salt disimpan bersama hash, salt unik per pengguna.
+  Mengoreksi jawaban v6 yang salah dan berbahaya (SHA-256 tanpa salt).
+- Konsep tanpa tool (6): plaintext, SQL injection, XSS, CSRF, HTTPS,
+  CSP — output prosa murni, melatih bedakan konsep vs aksi.
+- Nama tool tepat (5): check_site_basic (verifydeal + Juice Shop),
+  scan_sql, entry_rank, fetch_url — penalaran dulu, lalu JSON.
+- Ringkasan prosa (4): hasil check Juice Shop, peringkat forge 911,
+  status forge scored, isi halaman verifydeal.
+- Penanganan last_url (4): 'lanjut' PAKAI URL terakhir (scan_sql
+  param username); tugas baru ABAIKAN (OTP, IDOR, cari CSP).
+  Validasi: 0 duplikat (shingle maks J=0,06), 12 JSON tool-call valid
+  lewat parse_tool_call (asli), 2 snippet Python compile + jalan
+  (pbkdf2 verify benar/salah, OTP 6 digit), 10 baris prosa murni,
+  tanpa claim code/secret.

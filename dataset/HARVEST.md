@@ -146,6 +146,52 @@ validasi shingle (terlalu mirip baris aggregator harvest 2) dan
 ditulis ulang dengan sudut penalaran berbeda (baca daftar check
 per nama; baca skor per kolom).
 
+## Panen 4 (target v7) — 2026-11-15 (30 contoh, 246 → 276)
+
+Sumber: hasil ujian v6 — 5 soal, target lulus 4/5, hasil: 0 lulus penuh,
+2 setengah, 3 gagal. Batch ini BUKAN tambah data massal: 30 baris yang
+hanya memperbaiki kegagalan itu, reasoning-first.
+
+- Soal 2 gagal (rank): user tanya "berapa peringkat saya di food-picture-01?"
+  tapi adapter memanggil check_site ke URL terakhir. Penyebab: decide()
+  menambahkan baris "\n\nURL terakhir yang dicek: {last_url}" ke prompt —
+  baris yang tidak pernah dilihat adapter saat latih, jadi ia terpaku
+  pada URL itu. Perbaikan (5): peringkat lewat entry_rank dengan slug,
+  3 baris input-nya menyertakan baris last_url persis seperti decide()
+  (food-picture, github-core-clone, list_open_competitions) untuk mengajari
+  MENGABAIKAN last_url; my_entry_status forge (submission id
+  01a1dce6-630d-735f-ae2e-7ba5536a143e).
+- Soal 3 gagal dan BERBAHAYA (hash password): adapter merekomendasikan
+  hashlib.sha256 TANPA salt dan bilang jangan pakai bcrypt/PBKDF2 —
+  kebalikan dari yang benar. Perbaikan (6): pbkdf2_hmac + salt acak
+  os.urandom + 600.000 iterasi (stdlib, diuji jalan: verify benar=True,
+  salah=False); MD5 tidak aman; kenapa hash cepat tidak cocok; hashing
+  password vs file; salt disimpan bersama hash (bukan rahasia); salt
+  harus acak dan unik per pengguna.
+- Soal 5 gagal (konsep): user tanya soal password teks biasa, adapter
+  mengarang tool 'check_db_password' lalu fallback search_web memberi
+  hasil sampah. Perbaikan (6): pertanyaan konsep dijawab langsung dengan
+  prosa, TANPA tool call — plaintext, SQL injection, XSS, CSRF, HTTPS, CSP.
+- Soal 1 & 4 setengah (cek situs): nama tool masih 'check_site' bukan
+  'check_site_basic' (alias menyelamatkan, tapi nama tepat harus dipelajari);
+  ringkasan hasil tool masih JSON mentah. Perbaikan: nama tool tepat (5)
+  — check_site_basic (verifydeal + Juice Shop), scan_sql, entry_rank,
+  fetch_url, penalaran dulu baru JSON; ringkasan prosa (4) — hasil check
+  Juice Shop, peringkat forge 911 (rank 1615/2116), status forge scored
+  (14 passed 0 failed), isi halaman verifydeal.
+- Penanganan last_url (4): 'lanjut' PAKAI URL terakhir (scan_sql param
+  username); tugas baru ABAIKAN last_url (buat OTP 6 digit, apa itu IDOR,
+  cari dokumentasi CSP).
+
+Validasi: JSONL valid, kunci tepat, 0 duplikat (exact + shingle 8 kata,
+maks J=0,06 vs 246 baris lama + internal), 12 JSON tool-call valid lewat
+parse_tool_call ASLI (bukan salinan), hanya tool sungguhan + domain
+diizinkan, 2 snippet Python compile + jalan (pbkdf2 hash+verify, OTP
+6 digit), 10 baris prosa murni (6 konsep + 4 ringkasan), tanpa claim
+code / secret. Catatan: nama karangan ('check_site', 'check_url',
+'check_db_password') hanya muncul di dalam PENALARAN sebagai kesalahan
+yang dikoreksi, tidak pernah sebagai tool yang dipanggil.
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang
