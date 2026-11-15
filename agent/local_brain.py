@@ -191,10 +191,19 @@ class LocalBrain:
         # assistant dengan token itu, tapi eos bawaan model adalah
         # <|endoftext|>. Tanpa ini generate() terus jalan sampai
         # max_new_tokens dan model mengisi sisanya dengan <|fim_pad|>.
+        # Perbaikan 2026-11-15 (banjir fim_pad di uji v6): <|fim_pad|>
+        # TIDAK ditandai special di tokenizer Qwen2.5-Coder
+        # (tokenizer_config.json: "special": false, id 151662), jadi
+        # decode(skip_special_tokens=True) TIDAK membuangnya. Karena
+        # itu fim_pad juga dimasukkan ke eos (generate berhenti saat
+        # model mengeluarkan pad pertama) DAN teks hasil decode
+        # dipotong manual di kemunculan pertama <|fim_pad|>.
         im_end_id = self.tok.convert_tokens_to_ids("<|im_end|>")
+        fim_pad_id = self.tok.convert_tokens_to_ids("<|fim_pad|>")
         eos_ids = [self.tok.eos_token_id]
-        if im_end_id is not None and im_end_id not in eos_ids:
-            eos_ids.append(im_end_id)
+        for extra in (im_end_id, fim_pad_id):
+            if extra is not None and extra not in eos_ids:
+                eos_ids.append(extra)
         out = self.model.generate(
             **ids,
             max_new_tokens=max_new_tokens,
@@ -203,7 +212,11 @@ class LocalBrain:
             pad_token_id=self.tok.eos_token_id,
             eos_token_id=eos_ids,
         )
-        return self.tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True)
+        text = self.tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True)
+        for marker in ("<|fim_pad|>", "<|im_end|>"):
+            if marker in text:
+                text = text.split(marker, 1)[0]
+        return text
 
     def decide(self, task, last_url=None):
         """Putuskan: jalankan tool, jawab langsung, atau fallback.
