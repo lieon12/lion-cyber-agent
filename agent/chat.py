@@ -67,6 +67,28 @@ def summarize(trace):
                 if f.get("note"):
                     lines.append(f"    {f['note']}")
             continue
+        if step["tool"] == "entry_rank" and isinstance(r, dict):
+            # Hasil entry_rank TIDAK punya field 'status' — cabang umum
+            # di bawah (title + status) mencetak "(status None)" dan
+            # menghilangkan angka peringkatnya (bukti: uji v8 soal 2,
+            # 2026-11-15). Tampilkan peringkatnya secara eksplisit.
+            rank = r.get("rank")
+            if isinstance(rank, int):
+                lines.append(
+                    f"- entry_rank: peringkat {rank} dari {r.get('total_entries')} "
+                    f"(zona hadiah: {'ya' if r.get('in_prize_zone') else 'tidak'})"
+                )
+            else:
+                lines.append("- entry_rank: entry ditemukan tapi belum ada peringkat")
+            lines.append(f"  * Entry: {r.get('title')}")
+            if r.get("matches") is not None:
+                lines.append(
+                    f"  * Rekor juri: {r.get('wins')} menang / {r.get('draws')} seri / "
+                    f"{r.get('losses')} kalah dari {r.get('matches')} pertandingan"
+                )
+            if r.get("prize_rank") is not None:
+                lines.append(f"  * Peringkat hadiah: {r.get('prize_rank')}")
+            continue
         if isinstance(r, dict) and "findings" in r:
             lines.append(f"- {step['tool']}: status {r.get('status')}")
             for f in r["findings"]:

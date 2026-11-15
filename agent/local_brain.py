@@ -80,6 +80,7 @@ _TOOL_ALIASES = {
     "search": "search_web",
     "get_rank": "entry_rank",
     "check_rank": "entry_rank",
+    "get_user_rank": "entry_rank",  # uji v8: adapter mengarang nama ini untuk peringkat
 }
 
 
