@@ -191,3 +191,35 @@ kegagalan hasil ujian v6 (target 4/5 tidak tercapai: 0 lulus penuh,
   lewat parse_tool_call (asli), 2 snippet Python compile + jalan
   (pbkdf2 verify benar/salah, OTP 6 digit), 10 baris prosa murni,
   tanpa claim code/secret.
+
+Panen 5 — batch v8 METODE, bukan hafalan (30 contoh, 2026-11-15,
+total 306). Perintah Lion (diulang huruf besar): "AJARI DIA BUKAN
+BUAT DIA MENGHAFAL ... AJARI DIA CARA". Batch ini mengajari PROSEDUR
+KEPUTUSAN dan PRINSIP yang dipakai ke kasus BARU, bukan jawaban yang
+dihafal. Detail di `dataset/HARVEST.md`:
+- Metode peringkat (6): angka live → entry_rank, jangan karang;
+  'saya' = handle qjack (mengoreksi baris v7 yang salah mengajarkan
+  "slug saja cukup" — entry_rank WAJIB submission id ATAU handle);
+  pembeda my_entry_status; peringkat handle orang lain (salin handle
+  dari pertanyaan, bukan dari ingatan).
+- Prinsip hashing (10): hash cepat (SHA-256/MD5) untuk file/checksum,
+  BUKAN password; password butuh hashing lambat + salt + adaptif
+  (pbkdf2/bcrypt/argon2). Diterapkan ke kasus baru: hash file, token
+  API acak, verifikasi login, migrasi MD5, Node.js, bcrypt vs argon2,
+  database bocor. Setiap baris: analisis situasi → terapkan prinsip →
+  jawaban. Kontras eksplisit kapan SHA-256 benar dan kapan salah.
+- Metode pertanyaan konsep (6): kenali PERTANYAAN (bukan aksi) →
+  jawab langsung prosa, tanpa tool; topik bervariasi.
+- Pengecoh anti-hafalan (4): menyebut nama tool tapi butuh jawaban
+  langsung; menyebut URL tapi tentang konsep; "peringkat" SEO Google
+  (bukan entry_rank); "lanjut" tanpa URL → tanya dulu.
+- Ringkasan prosa bersih (4): hasil tool dirangkum bahasa Indonesia
+  natural, tanpa JSON dan tanpa loop.
+  Aturan batch ini: 0 baris diakhiri "Prinsipnya:" (frasa itu ada di
+  16 baris lama dan jadi umpan loop 4-7x); tidak ada template pembuka
+  yang diulang; validasi: 0 duplikat persis, Jaccard baris-penuh maks
+  0,299, 6 JSON tool-call valid lewat parse_tool_call, 7 snippet
+  Python compile + jalan, 0 tool karangan, 0 "Prinsipnya", 0 CJK.
+  Catatan: draf v8 lama (dataset-batch-2026-11-15-v8-targeted.jsonl)
+  TIDAK dipakai — parafrase v7 + template pembuka identik, justru
+  naskah hafalan.

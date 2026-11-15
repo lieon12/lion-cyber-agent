@@ -192,6 +192,36 @@ code / secret. Catatan: nama karangan ('check_site', 'check_url',
 'check_db_password') hanya muncul di dalam PENALARAN sebagai kesalahan
 yang dikoreksi, tidak pernah sebagai tool yang dipanggil.
 
+
+## Panen 5 — batch v8 METODE (30 contoh, 2026-11-15, total 306)
+
+Perintah Lion (huruf besar, 2026-11-15 12:29 WITA): "AJARI DIA BUKAN
+BUAT DIA MENGHAFAL ... AJARI DIA CARA". Batch ini mengajari prosedur
+keputusan + prinsip ke kasus baru, bukan jawaban hafalan:
+- Metode peringkat (6): angka live → entry_rank; 'saya' = qjack;
+  koreksi baris v7 ("slug saja cukup" itu SALAH — entry_rank wajib
+  submission id atau handle); my_entry_status vs entry_rank; handle
+  orang lain disalin dari pertanyaan.
+- Prinsip hashing (10): SHA-256/MD5 untuk file & token acak, BUKAN
+  password; password = lambat + salt + adaptif; kasus baru: file,
+  token, login, migrasi MD5, Node.js, bcrypt vs argon2, DB bocor.
+- Konsep tanpa tool (6): kenali pertanyaan → prosa langsung.
+- Pengecoh anti-hafalan (4): nama tool disebut tapi jawab langsung;
+  URL disebut tapi soalnya konsep; peringkat SEO ≠ entry_rank;
+  'lanjut' tanpa URL → tanya dulu.
+- Ringkasan prosa bersih (4): tanpa JSON, tanpa loop.
+
+Validasi (independen oleh bokone, bukan hanya laporan builder):
+JSONL valid, kunci tepat, 0 duplikat persis, Jaccard baris-penuh
+maks 0,299 (Jaccard instruction saja tinggi 0,5+ karena pertanyaan
+peringkat memang kosakatanya sama — yang dinilai adalah baris penuh:
+penalaran baru mengoreksi baris v7 yang salah), 6 JSON tool-call
+valid lewat parse_tool_call ASLI, 7 snippet Python compile + jalan,
+0 tool karangan, 0 "Prinsipnya", 0 CJK, tanpa secret. Satu baris
+(rival123) ditulis ulang instruksinya supaya lebih berbeda dari
+baris lama sebelum digabung. Draf v8 lama (v8-targeted.jsonl, 12:29
+WITA) tidak dipakai: parafrase v7 + template pembuka identik.
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang
