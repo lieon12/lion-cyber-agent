@@ -187,12 +187,21 @@ class LocalBrain:
         pola yang sama seperti training/run_kumar.py)."""
         text = self.tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         ids = self.tok(text, return_tensors="pt").to(self.model.device)
+        # Berhenti di <|im_end|>: format latih mengakhiri SETIAP jawaban
+        # assistant dengan token itu, tapi eos bawaan model adalah
+        # <|endoftext|>. Tanpa ini generate() terus jalan sampai
+        # max_new_tokens dan model mengisi sisanya dengan <|fim_pad|>.
+        im_end_id = self.tok.convert_tokens_to_ids("<|im_end|>")
+        eos_ids = [self.tok.eos_token_id]
+        if im_end_id is not None and im_end_id not in eos_ids:
+            eos_ids.append(im_end_id)
         out = self.model.generate(
             **ids,
             max_new_tokens=max_new_tokens,
             do_sample=False,
             repetition_penalty=1.15,
             pad_token_id=self.tok.eos_token_id,
+            eos_token_id=eos_ids,
         )
         return self.tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True)
 
