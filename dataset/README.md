@@ -241,3 +241,15 @@ dihafal. Detail di `dataset/HARVEST.md`:
   wiring (planner, validator, alias otak, summarize). Validasi
   independen bokone: 0 duplikat, Jaccard prosa maks 0,289 / 0,299,
   0 "Prinsipnya", 0 CJK, 0 nilai password.
+
+  Panen 8 (batch v11 try-exact, 12 baris, 2026-11-16, total 366):
+  dari tes v10 di PC (output mentah tanpa fallback) — adapter mengarang
+  tool 'verifydeal_site', mengarang hash sebagai password, format args
+  salah. 5 tool-call try_admin_password JSON murni (passwords selalu
+  list, kandidat hanya dari daftar umum), 2 kontras jangan-mengarang,
+  2 kontras situs-vs-tool, 2 penalaran keamanan, 1 rangkuman. Validasi
+  independen bokone: 0 duplikat, Jaccard prosa maks 0,242 / 0,237,
+  0 "Prinsipnya", 0 CJK, 5 tool-call valid, 0 nilai password.
+  Draf v11 pertama tidak digabung (prosa+JSON, Jaccard di atas 0,3);
+  dibangun ulang bersih. Perbaikan kode terkait: bocor token FIM
+  <|fim_suffix|>/<|fim_middle|> (commit 2f011ba0).

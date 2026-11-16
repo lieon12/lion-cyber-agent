@@ -346,6 +346,50 @@ commit 76932c48) DIGANTI seluruhnya oleh batch mencoba ini —
 dataset tetap 354 baris, 0 sisa referensi .env / verify_admin_password
 di dataset maupun di kode.
 
+## Panen 8 (batch v11 try-exact, 12 baris, 2026-11-16, total 366)
+
+Sumber: tes v10 Lion di PC, `--brain local`, output mentah PERTAMA tanpa
+fallback (2026-11-16 ~09:03 WITA). Adapter mengarang nama tool
+'verifydeal_site' (bukan try_admin_password), MENGARANG hash bcrypt
+sebagai argumen password, dan format args salah (satu field "password",
+bukan daftar "passwords"). Niatnya benar (cek password admin) dan naluri
+keamanannya masuk akal (jangan baca /etc/passwd, jangan cache password
+di luar server) — diperkuat, bukan dihapus.
+
+Isi: 5 tool-call try_admin_password JSON MURNI (4 di situs contoh lain
+supaya dia belajar NAMA tool, bukan nama situs) — passwords SELALU list,
+kandidat hanya dari DEFAULT_COMMON_PASSWORDS; 2 kontras jangan-mengarang
+(hash karangan ditolak; kandidat hanya dari daftar publik); 2 kontras
+situs-vs-tool ('verifydeal_site' dan 'check_password' bukan nama tool);
+2 penalaran keamanan (jangan baca /etc/passwd; jangan simpan password
+di luar peladen / jangan grep file sistem); 1 rangkuman (tidak ada yang
+diterima = audit bersih, berhenti).
+
+Validasi (skrip bokone sendiri, angka cocok dengan builder): 12 baris,
+kunci persis {instruction, input, output}, 0 duplikat (internal + vs
+354 dasar), Jaccard PROSA maks 0,242 internal / 0,237 vs dasar, 0
+"Prinsipnya", 0 CJK, 5 tool-call JSON valid lewat parse_tool_call ASLI,
+semua kandidat di DEFAULT_COMMON_PASSWORDS, 0 nilai password asli, 0
+VERIFYDEAL_ADMIN_PASSWORD / verify_admin_password, 0 nilai hash.
+
+Riwayat (jujur): draf v11 pertama (staging ...-v11-try-exact.jsonl)
+TIDAK digabung — baris tool-call-nya mencampur prosa dengan JSON, dan
+Jaccard menurut ukur bokone 0,317 internal / 0,357 vs dasar (di atas
+0,3). File draf itu juga tidak lolos pemeriksaan keamanan, jadi tidak
+dipakai apa adanya. Batch dibangun ulang bersih (v2) dari diagnosis tes
+v10. Pelajaran: bokone sempat salah menandai kunci "input" di draf v1
+sebagai cacat — padahal format dataset WAJIB {instruction, input,
+output} (notebook Colab assert itu). Draf v2 awalnya justru menghilangkan
+"input"; ketahuan saat cek gabung, diperbaiki (input:"" di 12 baris)
+sebelum merge. Cek kunci harus ke assert notebook, bukan ke asumsi.
+
+Perbaikan kode terkait (commit 2f011ba0, sudah di-push terpisah):
+<|fim_suffix|> (id 151661) dan <|fim_middle|> (id 151660) sama seperti
+<|fim_pad|> — TIDAK special di tokenizer Qwen2.5-Coder, jadi bocor ke
+output mentah v10. local_brain.py _generate + run_kumar.py ask() kini
+memasukkan keduanya ke eos dan memotong manual (pola sama seperti
+perbaikan fim_pad).
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang
