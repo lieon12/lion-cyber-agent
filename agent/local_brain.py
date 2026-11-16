@@ -12,10 +12,12 @@ float16 di CUDA, float32 di CPU).
 Yang penting:
 - Model hanya MENYARANKAN. Validator (agent/validator.py) yang
   memutuskan apakah tool boleh jalan — sama seperti otak Gemini.
-  Keputusan yang tidak lolos validator = fallback ke rule-based.
+  Keputusan yang tidak lolos validator = GAGAL secara terlihat.
+  Tidak ada penyelamatan otomatis ke rule-based (dihapus 2026-11-16
+  atas perintah Lion — supaya kemampuan otak terlihat apa adanya).
 - Adapter hasil latih percobaan (37 contoh) BELUM dilatih memanggil
-  tool dengan andal — ia akan sering fallback sampai fine-tune
-  berikutnya yang memakai contoh tool-calling di dataset/.
+  tool dengan andal — ia akan sering gagal secara terlihat sampai
+  fine-tune berikutnya yang memakai contoh tool-calling di dataset/.
 - torch / transformers / peft diimpor LAZY di dalam load(), supaya
   modul ini tetap bisa diimpor di mesin yang belum memasang
   pustaka itu (misalnya saat cek impor di lab).
@@ -54,7 +56,8 @@ DEFAULT_ADAPTER_DIR = "./kumar-lora-trial"
 TRAINING_SYSTEM_PROMPT = "Kamu adalah Kumar, asisten AI keamanan siber dan coding milik Lion. Jawablah dengan singkat dan benar."
 
 # Argumen wajib per tool — kalau tidak ada, keputusan dianggap
-# tidak lengkap dan jatuh ke fallback (bukan ditebak-tebak).
+# tidak lengkap dan GAGAL secara terlihat (bukan ditebak-tebak,
+# bukan penyelamatan ke rule-based).
 REQUIRED_ARGS = {
     "check_site_basic": ("url",),
     "fetch_url": ("url",),
@@ -66,33 +69,11 @@ REQUIRED_ARGS = {
     "read_repo_file": ("owner", "repo", "path"),
 }
 
-# Nama lama di system_prompt.md, plus nama karangan yang mungkin
-# dihasilkan model (bukti nyata: uji v3 memanggil 'check_url'
-# padahal maksudnya check_site_basic) — dinormalisasi ke nama
-# yang benar-benar dipanggil agen. Validator tetap yang
-# memutuskan apakah tool boleh jalan.
-_TOOL_ALIASES = {
-    "sql_scan": "scan_sql",
-    "check_url": "check_site_basic",
-    "check_site": "check_site_basic",
-    "check_website": "check_site_basic",
-    "sql_injection_scan": "scan_sql",
-    "check_sql": "scan_sql",
-    "get_url": "fetch_url",
-    "fetch": "fetch_url",
-    "search": "search_web",
-    "get_rank": "entry_rank",
-    "check_rank": "entry_rank",
-    "get_user_rank": "entry_rank",  # uji v8: adapter mengarang nama ini untuk peringkat
-    "find_password": "find_password_entry",
-    "cari_password": "find_password_entry",
-    "cek_password": "find_password_entry",
-    "find_login_form": "find_password_entry",
-    "coba_password": "try_admin_password",
-    "try_password": "try_admin_password",
-    "cek_password_admin": "try_admin_password",
-    "masukkan_password": "try_admin_password",
-}
+# TIDAK ADA alias nama tool (dihapus 2026-11-16 atas perintah Lion).
+# Otak harus mengeluarkan nama tool yang PERSIS (check_site_basic,
+# scan_sql, entry_rank, try_admin_password, ...) atau gagal secara
+# terlihat — alias menutupi nama yang salah dari otak, dan itu bagian
+# dari masalah penyelamatan itu.
 
 
 class LocalBrainError(Exception):
@@ -232,11 +213,13 @@ class LocalBrain:
         return text
 
     def decide(self, task, last_url=None):
-        """Putuskan: jalankan tool, jawab langsung, atau fallback.
+        """Putuskan: jalankan tool, jawab langsung, atau GAGAL secara terlihat.
 
         Kembalikan ("tool", nama, args) / ("answer", teks) /
-        ("fallback", alasan). Fallback berarti chat.py harus memakai
-        mode rule-based untuk tugas ini.
+        ("failed", alasan, output_mentah). "failed" berarti otak gagal —
+        chat.py TIDAK BOLEH menjalankan plan rule-based; kegagalan
+        ditampilkan apa adanya (alasan + output mentah otak) dan dicatat
+        sebagai pelajaran.
         """
         # Format prompt SAMA PERSIS seperti saat latih (lihat
         # training/kumar-trial-train.ipynb: format_row): system prompt
@@ -270,16 +253,18 @@ class LocalBrain:
         ]
         try:
             raw = self._generate(messages)
-        except Exception as e:  # noqa: BLE001 - model gagal = fallback
-            return ("fallback", f"otak lokal gagal menjawab: {e}")
+        except Exception as e:  # noqa: BLE001 - model gagal = gagal terlihat
+            return ("failed", f"otak lokal gagal menjawab: {e}", "")
         parsed = parse_tool_call(raw)
         if parsed is not None:
-            name = _TOOL_ALIASES.get(str(parsed.get("tool", "")), str(parsed.get("tool", "")))
+            # Nama tool dipakai APA ADANYA — tidak ada alias (dihapus
+            # 2026-11-16). Nama yang salah = gagal secara terlihat.
+            name = str(parsed.get("tool", ""))
             args = parsed.get("args") or {}
             if not isinstance(args, dict):
-                return ("fallback", "args tool-call bukan objek JSON")
+                return ("failed", "args tool-call bukan objek JSON", raw)
             if name not in TOOLS:
-                return ("fallback", f"tool '{name}' tidak dikenal")
+                return ("failed", f"tool '{name}' tidak dikenal", raw)
             # "Lanjut ..." tanpa URL: pakai URL terakhir.
             if (
                 name in ("scan_sql", "check_site_basic", "fetch_url", "find_password_entry")
@@ -289,21 +274,21 @@ class LocalBrain:
                 args = dict(args, url=last_url)
             # entry_rank boleh tanpa slug kalau ada submission id / handle.
             if name == "entry_rank" and not (args.get("slug") or args.get("submission_id") or args.get("handle")):
-                return ("fallback", "entry_rank butuh slug, submission id, atau handle")
+                return ("failed", "entry_rank butuh slug, submission id, atau handle", raw)
             # "Peringkat saya" tanpa handle/id: pakai handle Lion, kalau
             # tidak entry_rank gagal di tool-nya (bukti: uji v7 soal 2).
             if name == "entry_rank" and not args.get("submission_id") and not args.get("handle"):
                 args = dict(args, handle=DEFAULT_HANDLE)
             missing = [k for k in REQUIRED_ARGS.get(name, ()) if not args.get(k)]
             if missing:
-                return ("fallback", f"tool '{name}' kekurangan argumen: {', '.join(missing)}")
+                return ("failed", f"tool '{name}' kekurangan argumen: {', '.join(missing)}", raw)
             ok, reason = validate_tool_call(name, args)
             if not ok:
-                return ("fallback", f"validator menolak: {reason}")
+                return ("failed", f"validator menolak: {reason}", raw)
             return ("tool", name, args)
         # Jawaban teks biasa — tapi kalau tugas ini jelas-jelas sebuah
         # AKSI (cek / scan / cari / baca / peringkat), jangan biarkan
-        # model menjawab dari ingatan: fallback ke rule-based.
+        # model menjawab dari ingatan: GAGAL secara terlihat (bukan penyelamatan).
         # Pertanyaan konsep ("jelaskan apa itu SQL injection",
         # "cari tahu apa itu XSS") BUKAN aksi — boleh dijawab langsung.
         t = task.lower()
@@ -332,12 +317,15 @@ class LocalBrain:
         if "cari " in t and "cari tahu" not in t and "cari tau" not in t:
             needs_tool = True
         if needs_tool:
-            return ("fallback", "otak lokal menjawab teks padahal tugas ini butuh tool")
+            return ("failed", "otak lokal menjawab teks padahal tugas ini butuh tool", raw)
         return ("answer", raw.strip())
 
     def answer_with_context(self, task, tool_result):
         """Minta adapter merangkum hasil tool jadi jawaban singkat
-        bahasa Indonesia. Kembalikan "" kalau gagal."""
+        bahasa Indonesia. Kembalikan ringkasan MENTAH apa adanya
+        (walau berantakan — guard yang membuangnya dihapus 2026-11-16
+        atas perintah Lion, supaya Lion melihat yang sebenarnya).
+        Kembalikan "" hanya kalau generate gagal."""
         # Bentuk user SAMA seperti baris "merangkum hasil tool" di dataset
         # (mis. baris 52-53): instruction singkat + input "Hasil tool: ...".
         user = (
@@ -351,26 +339,12 @@ class LocalBrain:
                     {"role": "user", "content": user},
                 ]
             ).strip()
-        except Exception:  # noqa: BLE001 - gagal merangkum = pakai ringkasan lokal
+        except Exception:  # noqa: BLE001 - generate gagal = tidak ada ringkasan
             return ""
-        # Jaga-jaga: ringkasan model kecil sering "ngelantur" — kalau
-        # hasilnya bukan prosa Indonesia yang bersih, kembalikan ""
-        # supaya chat.py memakai ringkasan lokal dari jejak tool (yang
-        # selalu benar). Tiga pola ngelantur yang terbukti di uji v7:
-        # (1) menggemakan JSON tool-call, bukan merangkum;
-        # (2) serpihan bahasa lain (CJK) saat model ragu;
-        # (3) kalimat yang sama diulang-ulang ("Prinsipnya: ..." —
-        # pola penutup di 16 baris dataset lama yang jadi umpan loop).
-        if not text:
-            return ""
-        if parse_tool_call(text) is not None:
-            return ""
-        if any("\u4e00" <= ch <= "\u9fff" for ch in text):
-            return ""
-        sentences = [s.strip().lower() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
-        for s in set(sentences):
-            if len(s) > 20 and sentences.count(s) >= 3:
-                return ""
+        # TIDAK ADA guard lagi (dihapus 2026-11-16): ringkasan mentah
+        # otak dikembalikan apa adanya, walau menggemakan JSON,
+        # berantakan, atau berulang — supaya Lion melihat kemampuan
+        # otak yang sebenarnya.
         return text
 
 

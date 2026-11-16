@@ -1,7 +1,8 @@
 """Otak Gemini (v3) — via Gemini API (REST, hanya pakai requests).
 
 Tidak ada API key? Fungsi has_api_key() mengembalikan False dan
-chat.py fallback ke mode rule-based v2.
+chat.py TIDAK menjalankan tool apa pun (tidak ada penyelamatan otomatis
+ke rule-based — dihapus 2026-11-16 atas perintah Lion).
 
 API key TIDAK boleh ditulis di chat atau di-commit ke repo.
 Isi di file .env di Codespace:
