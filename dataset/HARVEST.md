@@ -390,6 +390,35 @@ output mentah v10. local_brain.py _generate + run_kumar.py ask() kini
 memasukkan keduanya ke eos dan memotong manual (pola sama seperti
 perbaikan fim_pad).
 
+## Panen 9 (batch v12 try-exact-more, 12 baris, 2026-11-16, total 378)
+
+Diagnosis: tes v11 Lion di PC — adapter TERKONFIRMASI v11 lewat tanggal
+file adapter_model.safetensors (hari ini) — tetap mengarang nama tool
+'search_password' (nama karangan KETIGA untuk tugas yang sama:
+verifydeal_site → verifydeal_captcha → search_password). Output bersih
+(JSON murni, tanpa token FIM), tapi namanya dikarang. Kesimpulan: 5
+baris tool-call v11 terlalu sedikit (1,4% dari 366) — sinyal nama
+persis kalah dari "nama yang terdengar masuk akal". Obatnya dosis lebih
+besar, bukan data yang sama.
+
+Isi: 8 baris tool-call try_admin_password JSON MURNI (4 dengan
+https://www.verifydeal.site/ berfrasa berbeda + 4 situs contoh BARU
+yang belum dipakai v11: warung-kopi.test, galeri-foto.demo,
+toko-sepatu.example, portal-berita.web), 2 kontras nama karangan
+(search_password — karangan v11; verifydeal_captcha — karangan v10,
+verifydeal.site tidak punya captcha), 2 penalaran metode (situs ditulis
+di argumen url, bukan di kunci tool; kandidat tidak boleh dirangkai
+sendiri).
+
+Validasi mandiri bokone (angka cocok dengan builder): kunci persis
+{instruction, input, output}, 0 duplikat, Jaccard prosa 0,261 internal
+/ 0,292 vs dasar, 0 "Prinsipnya:", 0 CJK, 8/8 tool-call valid via
+parse_tool_call asli, semua kandidat di DEFAULT_COMMON_PASSWORDS,
+0 nilai password asli. Catatan: pasangan terburuk vs dasar 0,292
+(baris 8 vs dasar 361 — keduanya baris kontras nama-karangan); masih di
+bawah 0,3 tapi tipis — kalau batch berikutnya menambah baris kontras
+nama-karangan lagi, ukur ulang dulu sebelum gabung.
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang
