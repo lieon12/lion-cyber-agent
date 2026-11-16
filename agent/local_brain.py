@@ -192,10 +192,15 @@ class LocalBrain:
         # itu fim_pad juga dimasukkan ke eos (generate berhenti saat
         # model mengeluarkan pad pertama) DAN teks hasil decode
         # dipotong manual di kemunculan pertama <|fim_pad|>.
+        # Perbaikan 2026-11-16 (bocor di uji v10 PC Lion): <|fim_suffix|>
+        # (id 151661) dan <|fim_middle|> (id 151660) juga TIDAK special
+        # dan ikut bocor ke output — perlakuannya sama: masuk eos + potong.
         im_end_id = self.tok.convert_tokens_to_ids("<|im_end|>")
         fim_pad_id = self.tok.convert_tokens_to_ids("<|fim_pad|>")
+        fim_suffix_id = self.tok.convert_tokens_to_ids("<|fim_suffix|>")
+        fim_middle_id = self.tok.convert_tokens_to_ids("<|fim_middle|>")
         eos_ids = [self.tok.eos_token_id]
-        for extra in (im_end_id, fim_pad_id):
+        for extra in (im_end_id, fim_pad_id, fim_suffix_id, fim_middle_id):
             if extra is not None and extra not in eos_ids:
                 eos_ids.append(extra)
         out = self.model.generate(
@@ -207,7 +212,7 @@ class LocalBrain:
             eos_token_id=eos_ids,
         )
         text = self.tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True)
-        for marker in ("<|fim_pad|>", "<|im_end|>"):
+        for marker in ("<|fim_pad|>", "<|im_end|>", "<|fim_suffix|>", "<|fim_middle|>"):
             if marker in text:
                 text = text.split(marker, 1)[0]
         return text
