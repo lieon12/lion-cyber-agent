@@ -578,6 +578,81 @@ vs v15), 0 Prinsipnya:/CJK/token buruk, 0 password asli, Jaccard prosa
 via parse_tool_call asli (url = situs di perintah sebelumnya di tiap
 baris, passwords tepat 1 string utuh), verifydeal.site tepat 2 baris.
 
+## Panen 14 — 2026-11-17: v17 format-persis-runtime + OTAK 1.5B (16 baris, 436 → 452)
+
+Tes perbaikan kode (17 Nov ~11:43 WITA, adapter v16 + local_brain.py
+commit 54832a76): perintah password tanpa situs kini JALAN ke
+verifydeal.site (perbaikan last_url berhasil — tidak lagi membuat URL
+palsu, tidak ditolak validator). TAPI dua masalah tersisa: (A) password
+yang diberikan TIDAK benar-benar dites — model memakai 17 password
+umum (default), bukan password pengguna (attempts=17 = daftar default;
+kalau password pengguna, attempts=1); (B) ringkasan MASIH menggemakan
+JSON (nama tool SALAH — check_site_basic, padahal yang jalan
+try_admin_password) — lebih bersih dari sebelumnya (tanpa token sampah/
+angka karangan/Prinsipnya) tapi masih JSON, bukan prosa.
+
+AKAR MASALAH (format latih tidak cocok dengan format jalan): baris v16
+menyertakan situs dalam kalimat instruksi ("Sebelumnya kamu diminta
+mengecek password admin ke [situs]. Sekarang pengguna bilang..."),
+padahal saat jalan situs ada di baris terpisah "URL terakhir yang
+dicek: [situs]". Begitu juga ringkasan: baris latih pakai instruksi
+singkat, padahal saat jalan prompt-nya "Rangkum hasil pengecekan ini
+untuk user dalam bahasa Indonesia.\nHasil tool:\n[fakta-teks-biasa]".
+
+KEPUTUSAN LION (17 Nov ~11:49 WITA): "otaknya terlalu kecil bagaimana
+kalau kita pakai otak yang AGAK lebih besar sedikit?" — Lion menyetujui
+ganti base model ke Qwen2.5-Coder-1.5B + v17. Alasan: 0.5B sangat kecil;
+dua masalah tersisa (ringkasan menggemakan JSON, password tidak diambil
+dari perintah) persis jenis tugas yang butuh kapasitas lebih besar.
+1.5B dipilih karena keluarga yang sama (tokenizer + format sama,
+dataset 436 baris langsung dipakai, notebook cuma ganti nama base) —
+3x kapasitas, masih jalan di CPU PC Lion (agak lebih lambat). 3B
+ditolak (terlalu lambat di CPU); Hermes ditolak (keluarga lain/Llama,
+harus tulis ulang semuanya). Base model diganti di local_brain.py
+(BASE_MODEL), run_kumar.py, train_lora.py, dan notebook latih
+(kedua sel BASE + judul) — 0 referensi 0.5B tersisa; impor + smoke
+test --brain rule terverifikasi. Adapter lama 0.5B (v16) disimpan
+Lion sebagai cadangan sebelum pasang adapter 1.5B yang baru.
+Latih ulang dari NOL di Colab dengan dataset penuh 452 baris
+(adapter lama tidak bisa dipakai di base baru).
+
+Batch v17 (file hidden_files/dataset-batch-2026-11-17-v17-format-15b.jsonl):
+- 6 baris password follow-up dalam format decide() PERSIS:
+  instruction = "<tugas>\n\nURL terakhir yang dicek: <url>" (frasa
+  "coba ini X", "tes yang ini X", "pakai password ini X", "coba pakai
+  ini X"); output = try_admin_password dengan url = situs dari baris
+  last_url + passwords = [password itu 1 string utuh]. 4 tool-call +
+  1 penalaran + 1 kontras. Situs: verifydeal.site (1 baris),
+  toko-tas.example, warung-nasi.test, klinik-hewan.demo; password
+  palsu (kunci-uji-44, sementara-coba-12, coba-sandi-28, uji-kunci-51
+  — kata yang sama dengan v16 tapi ANGKA beda, jadi model harus
+  menyalin dari instruksi, bukan menghafal).
+- 10 baris ringkasan dalam format answer_with_context() PERSIS:
+  instruction = "Rangkum hasil pengecekan ini untuk user dalam bahasa
+  Indonesia.\nHasil tool:\n[fakta]" — [fakta] dihasilkan fungsi ASLI
+  _plain_tool_facts dari repo (bukan ditulis tangan). 8 ringkasan
+  (check_site_basic ×2, scan_sql ×2, try_admin_password 17 dicoba,
+  entry_rank 87/512, find_password_entry ×2) + 1 penalaran + 1 kontras
+  (ringkasan JSON tool-call = salah vs prosa bersih = benar; versi
+  salah digambarkan abstrak tanpa mengutip JSON verbatim supaya token
+  buruk tidak masuk data latih).
+Validasi independen bokone (angka cocok dengan builder, kecuali
+catatan Jaccard di bawah): kunci persis 16/16, input kosong 16/16,
+0 duplikat (internal, vs dasar 436, vs v13–v16), 0 Prinsipnya:/CJK/
+token buruk, 0 password asli, tool-call valid via parse_tool_call
+asli (url == last_url 4/4, passwords 1 string utuh 4/4), fakta Part B
+== _plain_tool_facts 8/8 (direkonstruksi + dibandingkan string per
+string oleh bokone), output Part B tanpa "{" / "}" 10/10,
+verifydeal.site tepat 1 baris. Jaccard PROSA 0,434 vs dasar (baris 8
+vs dasar 428 — sejalan v13 0,413 / v15 0,418 / v16 0,419). Catatan:
+Jaccard mentah (termasuk baris JSON tool-call) menunjukkan 1,000
+untuk baris 0 vs dasar 420 — itu artefak metrik (ekstraksi kata
+[a-z]+ mengabaikan angka, jadi "kunci-uji-44" vs "kunci-uji-21"
+dianggap sama; struktur JSON tool-call memang harus sama persis).
+Bukan duplikat: instruksinya BERBEDA (format runtime vs kalimat
+v16) dan angka passwordnya BERBEDA — justru itu yang mengajari
+model menyalin password dari instruksi.
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang

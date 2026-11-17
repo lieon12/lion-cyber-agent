@@ -4,13 +4,13 @@
 Yang dibutuhkan:
   1. Python 3.10+ dan pip.
   2. pip install torch transformers peft accelerate
-     (Di laptop tanpa GPU, torch CPU sudah cukup — model 0.5B jalan di CPU,
+     (Di laptop tanpa GPU, torch CPU sudah cukup — model 1.5B jalan di CPU,
      hanya lebih lambat: beberapa detik per jawaban pendek. Kalau ada GPU
      NVIDIA, script ini otomatis memakainya.)
   3. Folder adapter hasil Colab: unzip kumar-lora-trial.zip di folder yang
      sama dengan script ini, sehingga ada ./kumar-lora-trial
      (berisi adapter_config.json, adapter_model.safetensors, dll).
-     Adapter saja TIDAK cukup — model dasar (Qwen2.5-Coder-0.5B, ~1 GB)
+     Adapter saja TIDAK cukup — model dasar (Qwen2.5-Coder-1.5B, ~3 GB)
      diunduh otomatis dari Hugging Face saat pertama kali jalan.
 
 Cara pakai:
@@ -32,7 +32,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 
-BASE = "Qwen/Qwen2.5-Coder-0.5B"
+BASE = "Qwen/Qwen2.5-Coder-1.5B"
 SYSTEM = "Kamu adalah Kumar, asisten AI keamanan siber dan coding milik Lion. Jawablah dengan singkat dan benar."
 
 TESTS = [

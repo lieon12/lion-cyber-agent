@@ -82,9 +82,9 @@ def load_rows(data_path):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Latih LoRA Kumar (Qwen2.5-Coder-0.5B).")
-    ap.add_argument("--base", default="Qwen/Qwen2.5-Coder-0.5B",
-                    help="Model dasar (default: Qwen/Qwen2.5-Coder-0.5B, sama seperti notebook trial).")
+    ap = argparse.ArgumentParser(description="Latih LoRA Kumar (Qwen2.5-Coder-1.5B).")
+    ap.add_argument("--base", default="Qwen/Qwen2.5-Coder-1.5B",
+                    help="Model dasar (default: Qwen/Qwen2.5-Coder-1.5B, sama seperti notebook trial).")
     ap.add_argument("--data", default="dataset/dataset.jsonl", help="File dataset.jsonl.")
     ap.add_argument("--output", default="kumar-lora-trial", help="Folder output adapter.")
     ap.add_argument("--epochs", type=int, default=3)

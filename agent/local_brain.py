@@ -1,7 +1,7 @@
 """Otak lokal Kumar (v5) — adapter LoRA hasil fine-tune sebagai otak agen.
 
 Ini yang menggabungkan otak dan badan: adapter hasil latih di Colab
-(base Qwen2.5-Coder-0.5B + adapter LoRA) dipakai untuk memutuskan
+(base Qwen2.5-Coder-1.5B + adapter LoRA) dipakai untuk memutuskan
 tool apa yang harus dijalankan, lalu agent/chat.py menjalankan tool
 itu lewat validator seperti biasa.
 
@@ -44,7 +44,7 @@ from .agent import (
 )
 from .validator import validate_tool_call
 
-BASE_MODEL = "Qwen/Qwen2.5-Coder-0.5B"
+BASE_MODEL = "Qwen/Qwen2.5-Coder-1.5B"
 DEFAULT_ADAPTER_DIR = "./kumar-lora-trial"
 
 # System prompt yang dipakai decide() dan answer_with_context().
