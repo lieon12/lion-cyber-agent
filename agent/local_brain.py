@@ -132,6 +132,69 @@ def _find_adapter_dir(adapter_dir):
     return path
 
 
+def _plain_tool_facts(tool_result):
+    """Ubah hasil tool jadi fakta teks biasa (bukan dict/JSON).
+
+    Perbaikan 2026-11-17 (tes v16): answer_with_context() memberi otak
+    hasil tool MENTAH (str(dict) = JSON) — padahal baris latih ringkasan
+    tidak pernah menunjukkan dict mentah, hanya instruksi singkat —
+    jadi otak menggemakan JSON dan mengarang angka/nama tool. Dengan
+    fakta teks biasa, otak menerima masukan yang sama bentuknya dengan
+    yang ia latih, dan ia tetap yang merangkum (bukan guard).
+    Isi halaman mentah ("text") dan header dibuang — ringkasan hanya
+    butuh faktanya, bukan isi situsnya.
+    """
+    if isinstance(tool_result, str):
+        return tool_result
+    if not isinstance(tool_result, dict):
+        return str(tool_result)
+    lines = []
+    # Pesan hasil (try_admin_password dkk.) sudah kalimat jadi.
+    if tool_result.get("message"):
+        lines.append(str(tool_result["message"]))
+    if tool_result.get("url"):
+        lines.append(f"Situs: {tool_result['url']}")
+    if tool_result.get("status") is not None:
+        lines.append(f"Status HTTP: {tool_result['status']}")
+    if tool_result.get("attempts") is not None:
+        lines.append(f"Percobaan: {tool_result['attempts']}")
+    if "accepted" in tool_result:
+        lines.append(
+            f"Diterima: {'ya' if tool_result['accepted'] else 'tidak'}"
+        )
+    if tool_result.get("password"):
+        lines.append(f"Password yang diterima: {tool_result['password']}")
+    if "changed" in tool_result:
+        lines.append(
+            f"Data berubah: {'ya' if tool_result['changed'] else 'tidak'}"
+        )
+    if tool_result.get("findings"):
+        for f in tool_result["findings"]:
+            lines.append(f"- {f}")
+    if tool_result.get("summary"):
+        lines.append(str(tool_result["summary"]))
+    if tool_result.get("title"):
+        lines.append(f"Judul: {tool_result['title']}")
+    if tool_result.get("rank") is not None:
+        lines.append(
+            f"Peringkat: {tool_result['rank']} dari "
+            f"{tool_result.get('total_entries')}"
+        )
+    # Fallback generik: field skalar lain sebagai "kunci: nilai".
+    skip = {
+        "message", "url", "status", "attempts", "tried", "accepted",
+        "password", "changed", "findings", "summary", "title", "rank",
+        "total_entries", "text", "security_headers", "final_url",
+        "server", "content_type",
+    }
+    for k, v in tool_result.items():
+        if k in skip:
+            continue
+        if isinstance(v, (str, int, float, bool)) and v != "" and v is not None:
+            lines.append(f"{k}: {v}")
+    return "\n".join(lines) if lines else str(tool_result)[:500]
+
+
 class LocalBrain:
     """Otak lokal: base model + adapter LoRA Kumar."""
 
@@ -244,13 +307,23 @@ class LocalBrain:
             t = task.lower()
             is_rank = any(k in t for k in ("peringkat", "rank", "posisi", "ranking"))
             is_continuation = any(
-                k in t for k in ("lanjut", "scan", "cek", "periksa", "uji", "test")
+                k in t
+                for k in ("lanjut", "scan", "cek", "periksa", "uji", "test",
+                          "coba", "pakai")
             )
-            # JANGAN tempel last_url ke tugas coba password admin:
-            # password ini khusus verifydeal.site, sedangkan last_url
-            # bisa situs lain (mis. demo.owasp-juice.shop dari cek
-            # sebelumnya) — model bisa salah mencoba password ke sana.
-            if is_continuation and not is_rank and not is_admin_password(task):
+            # Tugas coba password admin JUGA butuh konteks situs terakhir.
+            # Perbaikan 2026-11-17 (tes v16): tanpa situs, otak tidak bisa
+            # tahu ke mana password itu diuji dan malah membuat URL dari
+            # string passwordnya ("https://<password>.com/") — validator
+            # menolak, tidak ada yang teruji. "coba"/"pakai" ditambahkan
+            # karena perintah susulan ("coba pakai ini <password>") tidak
+            # mengandung kata lanjutan lama. Situs terakhir adalah konteks
+            # percakapan (situs yang baru saja dicek); otak tetap yang
+            # memutuskan tool dan argumennya. Pengecualian password
+            # sebelumnya dihapus — tidak ada situs sama sekali lebih buruk
+            # daripada situs terakhir yang mungkin salah, karena validator
+            # tetap menolak domain yang tidak diizinkan.
+            if is_continuation and not is_rank:
                 user += f"\n\nURL terakhir yang dicek: {last_url}"
         messages = [
             {"role": "system", "content": TRAINING_SYSTEM_PROMPT},
@@ -332,10 +405,11 @@ class LocalBrain:
         atas perintah Lion, supaya Lion melihat yang sebenarnya).
         Kembalikan "" hanya kalau generate gagal."""
         # Bentuk user SAMA seperti baris "merangkum hasil tool" di dataset
-        # (mis. baris 52-53): instruction singkat + input "Hasil tool: ...".
+        # (mis. baris 52-53): instruction singkat + fakta teks biasa
+        # (bukan dict/JSON — lihat _plain_tool_facts).
         user = (
             "Rangkum hasil pengecekan ini untuk user dalam bahasa Indonesia.\n"
-            f"Hasil tool: {str(tool_result)[:2000]}"
+            f"Hasil tool:\n{_plain_tool_facts(tool_result)[:2000]}"
         )
         try:
             text = self._generate(
