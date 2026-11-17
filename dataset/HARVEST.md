@@ -451,6 +451,45 @@ duplikat). Catatan: baris ringkasan memang berbagi cetakan ("status
 200, HTTPS, header hilang"), jadi Jaccard akan selalu lebih tinggi
 di kelompok ini; yang dijaga adalah isi (situs + hasil) berbeda.
 
+## Panen 11 (batch v14 ringkasan-lebih-banyak + prinsip 17-kandidat, 18 baris, 2026-11-17, total 408)
+
+Diagnosis: tes adapter v13 (17 Nov, adapter terkonfirmasi v13 lewat
+tanggal file 09:32) — ringkasan MASIH berantakan (mengarang JSON
+"verifydeal", "NdrFc", "Prinsipnya:", "<lemma") dan try_admin_password
+hanya mencoba 3 kandidat. v13 (12 baris) terlalu sedikit dosisnya.
+AKAR MASALAH "hanya 3 dicoba" (ditemukan builder, dikonfirmasi bokone
+dengan parse_tool_call asli): ke-13 baris tool-call try_admin_password
+di dataset dasar (baris 354–358, 366–373) SEMUANYA mengirim daftar
+`passwords` SEBAGIAN (5–10 item) — model belajar mengirim subset.
+Perbaikan v14: tool-call hanya memakai {"url": ...} TANPA arg
+`passwords`, sehingga tool memakai daftar default lengkap (17).
+
+Isi: 12 baris ringkasan/penalaran (prosa bersih, tool + hasil
+bervariasi: check_site_basic example.com LIVE + toko-komik.example +
+blog-pribadi.test 503; scan_sql example.com LIVE + forum-hobi.test;
+try_admin_password aplikasi-catatan.demo dengan kandidat "admin"
+DITERIMA — password umum publik, diajari laporkan + sarankan ganti;
+entry_rank tiny-chess-01 belum ada entry; find_password_entry
+perpustakaan-kota.test + klinik-sehat.demo; search_web OWASP LIVE;
+2 penalaran: kenapa tidak menggemakan JSON; jangan mengarang angka)
++ 6 baris prinsip 17-kandidat (2 tool-call JSON murni kedai-teh.test
++ studio-musik.example, 2 penalaran, 1 kontras berhenti-3 vs coba-17,
+1 ringkasan run 17 percobaan toko-roti.demo). Prinsip Lion dijaga:
+9 domain sintetis BARU, verifydeal.site TIDAK disebut di baris mana
+pun (0 baris) — metode, bukan hafalan situs.
+
+Validasi mandiri bokone (angka cocok dengan builder): kunci persis
+{instruction, input, output} 18/18, input kosong semua, 0 duplikat
+vs dasar 390 maupun internal, 0 "Prinsipnya:", 0 CJK, 0 token
+<lemma>/NdrFc/{lngue}/FIM, 0 password asli (hanya "admin" +
+"password" dari daftar umum publik). Jaccard prosa 0,390 internal /
+0,379 vs dasar — lebih rendah dari v13 (0,413). Tool-call baris 12–13
+valid via parse_tool_call asli, hanya arg url (tanpa passwords).
+Catatan: Jaccard mentah (termasuk baris JSON tool-call) lebih tinggi
+(0,538 internal / 0,500 vs dasar) karena dua JSON try_admin_password
+hampir identik — itu wajar untuk tool-call, yang dijaga adalah
+Jaccard prosa.
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang
