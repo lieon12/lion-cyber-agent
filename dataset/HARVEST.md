@@ -536,6 +536,48 @@ dua ringkasan "tes password ditolak" (situs + kata sandi + frasa
 berbeda, bukan duplikat). Tool-call baris 0–3 valid via parse_tool_call
 asli, passwords tepat 1 string utuh tiap baris.
 
+Koreksi Panen 12 bagian 2 (2026-11-17 ~10:36 WITA, SEBELUM Lion
+latih): verifikasi independen menemukan pembersihan v15 melewatkan
+4 baris — baris 342–345 (0-indexed; prosa + JSON, bukan JSON murni)
+masih mengajari daftar `passwords` SEBAGIAN (12, 8, 10, 10 item),
+semuanya verifydeal.site — tepat situs yang dites. Keempatnya
+diganti dengan versi bersih (instruksi sama, penalaran dipertahankan,
+JSON jadi {"url"} saja). Backup sebelum koreksi di
+hidden_files/dataset-backup-before-v15-cleanup-part2-2026-11-17.jsonl.
+Verifikasi: dataset tetap 420 baris, hanya ke-4 baris itu berubah,
+kini TIDAK ADA lagi baris try_admin_password dengan daftar sebagian
+(>1 passwords) — yang tersisa hanya 4 baris v15 dengan tepat 1
+password pengguna (sesuai desain).
+
+## Panen 13 — 2026-11-17: v16 konteks + ringkasan (16 baris, 420 → 436)
+
+Tes adapter v15 (17 Nov ~11:06 WITA) — TEROBOSAN: try_admin_password
+kini mencoba 17 kandidat penuh (pertama kali; pembersihan v15 berhasil).
+Tapi dua kegagalan tersisa: (A) password yang diberikan pengguna TANPA
+mengulang situs → otak membuat URL dari string password itu
+(https://[password].com/) dan validator menolak; (B) ringkasan masih
+berantakan (mengarang "verifydeal_site", "NdrFc", "{lng}", "Prinsipnya:",
+"<lemma>", angka karangan "try_count = 18" padahal aktual 17).
+
+Batch v16 (file hidden_files/dataset-batch-2026-11-17-v16-context-summary.jsonl):
+- 6 baris konteks: password pengguna tanpa situs → situs diambil dari
+  perintah sebelumnya (url = situs di konteks), passwords = [1 string
+  utuh]; 4 tool-call JSON + 1 penalaran + 1 kontras. Situs beragam
+  (verifydeal.site maks 2 baris, warung-kopi.example, toko-buku.example,
+  kedai-mie.test); password palsu (kunci-uji-21, sementara-coba-8,
+  coba-sandi-15, uji-kunci-33, sandi-contoh-7).
+- 10 baris ringkasan: prosa Indonesia bersih, tool + hasil bervariasi
+  (check_site_basic, scan_sql, try_admin_password 17 dicoba — angka
+  AKTUAL dilaporkan, entry_rank tanpa mengarang angka,
+  find_password_entry); 1 penalaran + 1 kontras (ringkasan JSON + angka
+  karangan 18 = salah vs prosa bersih 17 = benar).
+Validasi independen bokone (angka cocok dengan builder): kunci persis
+16/16, input kosong 16/16, 0 duplikat (internal, vs dasar 420, vs v13,
+vs v15), 0 Prinsipnya:/CJK/token buruk, 0 password asli, Jaccard prosa
+0,264 internal (terendah sejauh ini) / 0,419 vs dasar, tool-call valid
+via parse_tool_call asli (url = situs di perintah sebelumnya di tiap
+baris, passwords tepat 1 string utuh), verifydeal.site tepat 2 baris.
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang
