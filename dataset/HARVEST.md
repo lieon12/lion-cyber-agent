@@ -490,6 +490,52 @@ Catatan: Jaccard mentah (termasuk baris JSON tool-call) lebih tinggi
 hampir identik — itu wajar untuk tool-call, yang dijaga adalah
 Jaccard prosa.
 
+## Panen 12 (batch v15 password-pengguna + PEMBERSIHAN 13 baris, 12 baris baru, 2026-11-17, total 420)
+
+Diagnosis: tes adapter v14 (dikonfirmasi v14) — ringkasan MASIH
+berantakan, tool tetap 3 percobaan, "verifydeal_site" muncul lagi,
+plus kegagalan baru: tool dipanggil dengan arg `username` (tidak ada)
+→ TypeError, dan halusinasi peringkat "Peringkat 10". Akar masalah
+"hanya 3 dicoba" TERKONFIRMASI: ke-13 baris tool-call
+try_admin_password di dataset (354–358, 366–373) semuanya mengirim
+daftar `passwords` SEBAGIAN (5–10 item). Menambah baris saja tidak
+cukup — sinyal lama (13 baris) mengalahkan sinyal baru (2 baris v14).
+
+PEMBERSIHAN (bagian dari Panen 12, bukan sekadar tambah baris):
+ke-13 baris lama diperbaiki — arg `passwords` dihapus, sekarang hanya
+{"url": ...} → tool memakai default 17. Backup dataset sebelum bersih
+di hidden_files/dataset-backup-before-v15-cleanup-2026-11-17.jsonl.
+Verifikasi: 408 baris tetap, hanya ke-13 baris itu berubah. Setelah
+bersih, ke-15 baris tool-call try_admin_password (13 bersih + 2 v14)
+SEMUA hanya {url} — diverifikasi dengan parse_tool_call asli.
+
+Isi batch baru (12 baris): perilaku KETIKA PENGGUNA MEMBERIKAN
+PASSWORD UNTUK DITES — Kumar harus MENCOBA password itu dengan
+kehendak/inisiatifnya sendiri (dia paham tugasnya), bukan hardcode
+(perintah Lion 10:25 WITA). 4 tool-call JSON murni (warung-soto.test,
+bengkel-motor.example, toko-bunga.demo, klinik-gigi.test — password
+palsu berbeda, termasuk "coba-kunci#31" yang mengandung # dan TIDAK
+dipecah), 3 penalaran (kenapa mencoba password yang diberikan;
+bagaimana memutuskan pakai `passwords` vs tidak; kenapa password satu
+string utuh), 2 kontras (beri password → sertakan passwords; tidak
+beri → hanya {url}), 1 mekanisme (tool hanya menerima url +
+passwords, tidak ada `username` — menjawab kegagalan v14), 1 "jangan
+mengarang peringkat", 1 ringkasan prosa bersih. Prinsip dijaga: 7
+domain sintetis BARU (0 sudah ada di dasar), verifydeal.site TIDAK
+disebut (0 baris), password semuanya placeholder palsu (contoh-kunci-
+123, sementara-uji-9, kunci-latihan-77, coba-kunci#31, uji-sementara-
+42, contoh-aman-5) — bukan password asli, bukan dari daftar umum.
+
+Validasi mandiri bokone (angka cocok dengan builder): kunci persis
+{instruction, input, output} 12/12, input kosong semua, 0 duplikat
+vs dasar 408 / v13 / v14 / internal, 0 "Prinsipnya:", 0 CJK, 0 token
+<lemma>/NdrFc/{lngue}/FIM, 0 password asli. Jaccard prosa 0,302
+internal / 0,418 vs dasar — internal terendah sejauh ini (v13 0,356,
+v14 0,390); vs dasar setara v13 (0,413) karena pasangan tertingginya
+dua ringkasan "tes password ditolak" (situs + kata sandi + frasa
+berbeda, bukan duplikat). Tool-call baris 0–3 valid via parse_tool_call
+asli, passwords tepat 1 string utuh tiap baris.
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang
