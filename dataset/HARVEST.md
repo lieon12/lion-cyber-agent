@@ -419,6 +419,38 @@ parse_tool_call asli, semua kandidat di DEFAULT_COMMON_PASSWORDS,
 bawah 0,3 tapi tipis — kalau batch berikutnya menambah baris kontras
 nama-karangan lagi, ukur ulang dulu sebelum gabung.
 
+## Panen 10 (batch v13 ringkasan-bersih, 12 baris, 2026-11-17, total 390)
+
+Diagnosis: tes 10:07 16 Nov — nama tool BENAR pertama kali
+(try_admin_password jalan), tapi ringkasan dari answer_with_context
+mentah (tanpa guard, fallback sudah dihapus): menggemakan JSON tool
++ token sampah ("NdrFc", "{lngue}") + prosa berantakan + "Prinsipnya:"
+muncul lagi + token `<lemma>` bocor. Celah data: dari 378 baris dasar
+hanya 1 yang mengajari "meringkas hasil tool jadi prosa bersih".
+Obatnya batch ringkasan sendiri, bukan guard kode.
+
+Isi: 4 ringkasan bersih hasil tool nyata (check_site_basic
+verifydeal.site; try_admin_password 17 kandidat; entry_rank
+food-picture-01 2311/4332; scan_sql verifydeal.site), 2 situs contoh
+baru, 1 try_admin_password situs contoh, 1 status submission aggregator
+(skor latihan 99, hasil 30 Nov), 2 penalaran (jangan ulang hasil mentah
+tool; jangan mengarang angka — contoh token-radar-01 yang memang belum
+ada entry Lion), 1 scan_sql Juice Shop, 1 portal-berita.web. Semua
+output prosa Indonesia bersih — 0 diawali "{" dan 0 mengandung
+tool-call JSON.
+
+Validasi mandiri bokone (angka cocok dengan builder): kunci persis
+{instruction, input, output} 12/12, input kosong semua, 0 duplikat vs
+dasar 378 maupun internal, 0 "Prinsipnya:", 0 token <lemma>/NdrFc/
+{lngue}/FIM, 0 CJK, 0 nilai password asli. Jaccard prosa 0,356
+internal / 0,413 vs dasar — lebih tinggi dari v11/v12 (0,24–0,29),
+tapi pasangan tertingginya melawan baris ringkasan yang SUDAH ADA
+untuk tugas yang sama (baris baru 0 vs dasar 268: ringkasan
+verifydeal vs ringkasan Juice Shop — situs dan hasil berbeda, bukan
+duplikat). Catatan: baris ringkasan memang berbagi cetakan ("status
+200, HTTPS, header hilang"), jadi Jaccard akan selalu lebih tinggi
+di kelompok ini; yang dijaga adalah isi (situs + hasil) berbeda.
+
 ## Aturan ke depan
 
 - Setiap lab pagi, bounty, perbaikan bug, dan uji adapter yang
